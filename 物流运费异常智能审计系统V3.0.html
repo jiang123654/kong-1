@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物流运费异常智能风控中台 - Final Perfect UI Edition</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        tailwind.config = { theme: { extend: { colors: { primary: '#4F46E5', secondary: '#10B981', background: '#F8FAFC' }, animation: { 'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite', 'bounce-slow': 'bounce 3s infinite', 'fadeIn': 'fadeIn 0.5s ease-out forwards' } } } }
+    </script>
+    <style>
+        /* 极致唯美背景与排版 */
+        body { background-color: #f8fafc; background-image: radial-gradient(at 40% 20%, hsla(226,100%,74%,0.08) 0px, transparent 50%), radial-gradient(at 80% 0%, hsla(189,100%,56%,0.08) 0px, transparent 50%), radial-gradient(at 0% 50%, hsla(355,100%,93%,0.08) 0px, transparent 50%), linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px); background-size: 100% 100%, 100% 100%, 100% 100%, 24px 24px, 24px 24px; background-attachment: fixed; color: #1e293b; overflow-x: hidden; }
+        
+        /* 骨架屏与涟漪 */
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .skeleton { background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+        .skeleton-chart { height: 100%; width: 100%; min-height: 200px; border-radius: 12px; } .skeleton-text { height: 24px; width: 60%; margin-bottom: 12px; border-radius: 4px; } .skeleton-row { height: 36px; width: 100%; margin-bottom: 8px; border-radius: 4px; }
+        .ripple-btn { position: relative; overflow: hidden; } .ripple { position: absolute; border-radius: 50%; transform: scale(0); animation: ripple-anim 600ms linear; background-color: rgba(255, 255, 255, 0.4); pointer-events: none; }
+        @keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
+        
+        /* 悬浮提示框与空状态 */
+        #toast-container { position: fixed; top: 80px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+        .toast { transform: translateX(120%); transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.4s; opacity: 0; pointer-events: auto; } .toast.show { transform: translateX(0); opacity: 1; }
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; min-height: 240px; opacity: 0.8; animation: fadeIn 0.5s; } .empty-icon { font-size: 3.5rem; color: #cbd5e1; margin-bottom: 16px; transition: transform 0.3s; } .empty-state:hover .empty-icon { transform: scale(1.1) rotate(-5deg); color: #94a3b8; }
+        
+        /* 表格精细化交互 */
+        .table-row-hover { position: relative; transition: background 0.2s; } .row-actions { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); opacity: 0; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: flex; gap: 6px; pointer-events: none; } .table-row-hover:hover .row-actions { opacity: 1; transform: translateY(-50%) translateX(-4px); pointer-events: auto; }
+        .action-btn { background: rgba(255,255,255,0.95); border: 1px solid #e2e8f0; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; color: #475569; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s; } .action-btn:hover { background: #f8fafc; color: #4F46E5; border-color: #c7d2fe; }
+
+        /* 核心毛玻璃与高光面版 */
+        .panel-glass { background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.75) 100%); backdrop-filter: blur(16px) saturate(120%); -webkit-backdrop-filter: blur(16px) saturate(120%); border: 1px solid rgba(255,255,255,0.7); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04), inset 0 1px 2px rgba(255,255,255,1); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .panel-glass:hover { border-color: rgba(255,255,255,0.9); box-shadow: 0 12px 40px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(255,255,255,0.6), inset 0 1px 2px rgba(255,255,255,1); transform: translateY(-2px); }
+        .header-glass { background: rgba(255,255,255,0.85); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,1); box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
+        .btn-glass { background: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,1); box-shadow: inset 0 1px 2px rgba(255,255,255,1), 0 1px 2px rgba(0,0,0,0.02); transition: all 0.2s; } .btn-glass:hover { background: rgba(255,255,255,1); transform: translateY(-1px); box-shadow: inset 0 1px 2px rgba(255,255,255,1), 0 4px 8px rgba(0,0,0,0.04); }
+        .input-glass { background: rgba(255,255,255,0.7); border: 1px solid rgba(203,213,225,0.5); box-shadow: inset 0 2px 4px rgba(0,0,0,0.02); transition: all 0.3s; } .input-glass:focus { background: rgba(255,255,255,0.95); border-color: rgba(99, 102, 241, 0.5); outline: none; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15), inset 0 1px 2px rgba(255,255,255,1); }
+        
+        /* 绝美环境光背景 */
+        .panel-glow-indigo::before { content: ""; position: absolute; top: -30%; right: -10%; width: 50%; height: 50%; background: radial-gradient(circle, rgba(79, 70, 229, 0.08) 0%, transparent 70%); border-radius: 50%; pointer-events: none; z-index: 0; }
+        .panel-glow-emerald::before { content: ""; position: absolute; bottom: -30%; left: -10%; width: 50%; height: 50%; background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%); border-radius: 50%; pointer-events: none; z-index: 0; }
+        .panel-glow-rose::before { content: ""; position: absolute; top: -20%; right: -20%; width: 60%; height: 60%; background: radial-gradient(circle, rgba(244, 63, 94, 0.06) 0%, transparent 70%); border-radius: 50%; pointer-events: none; z-index: 0; }
+        .panel-glow-amber::before { content: ""; position: absolute; bottom: -20%; right: -10%; width: 50%; height: 50%; background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 70%); border-radius: 50%; pointer-events: none; z-index: 0; }
+        .bg-grid-pattern { background-image: radial-gradient(rgba(148, 163, 184, 0.2) 1.5px, transparent 1.5px); background-size: 20px 20px; }
+        
+        .row-white { background-color: #ffffff; } .row-yellow { background-color: #FEF9C3; } .row-white:hover, .row-yellow:hover { filter: brightness(0.96); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.5); border-radius: 4px; } ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.8); }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; } input[type="file"] { display: none; }
+        .tab-content { display: none; } @keyframes slideUpFadeIn { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } } .tab-content.active { display: block; animation: slideUpFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; } .tab-content.flex-page.active { display: flex; flex-direction: column; } .chart-box { width: 100%; height: 100%; min-height: 280px; }
+        
+        /* 封面流动背景 */
+        .landing-bg-minimal { background-color: rgba(255,255,255,0.9); backdrop-filter: blur(20px); }
+        .animate-blob { animation: blob 10s infinite alternate; } .animation-delay-2000 { animation-delay: 2s; } .animation-delay-4000 { animation-delay: 4s; }
+        @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
+        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(1.6); opacity: 0; } } .animate-pulse-ring { animation: pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; } .animation-delay-1500 { animation-delay: 1.5s; }
+        .landing-exit { animation: landing-slide-up 0.7s cubic-bezier(0.65, 0, 0.35, 1) forwards; pointer-events: none; } @keyframes landing-slide-up { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-40px) scale(0.98); opacity: 0; } }
+
+        /* Astro-Bot 终极动画 */
+        .bot-cabin { background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%); box-shadow: inset 0 2px 10px rgba(255,255,255,0.05), 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .bot-cabin-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(99, 102, 241, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(99, 102, 241, 0.08) 1px, transparent 1px); background-size: 24px 24px; z-index: 0; pointer-events: none; }
+        @keyframes bot-free-flight { 0% { transform: translate(40px, 0px) scale(0.95) rotate(3deg); } 20% { transform: translate(140px, -60px) scale(0.8) rotate(-4deg); } 40% { transform: translate(190px, 10px) scale(1.15) rotate(6deg); } 60% { transform: translate(100px, -80px) scale(0.85) rotate(-5deg); } 80% { transform: translate(30px, -20px) scale(1.05) rotate(4deg); } 100% { transform: translate(40px, 0px) scale(0.95) rotate(3deg); } }
+        @keyframes bot-idle-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } } @keyframes arm-swing-left { 0%, 100% { transform: rotate(15deg); } 50% { transform: rotate(-25deg); } } @keyframes arm-swing-right { 0%, 100% { transform: rotate(-25deg); } 50% { transform: rotate(15deg); } } @keyframes bot-scan { 0% { transform: translateX(-100%) skewX(-15deg); } 100% { transform: translateX(200%) skewX(-15deg); } }
+        .bot-body { background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #e2e8f0 100%); box-shadow: -8px 12px 20px rgba(0,0,0,0.4), inset 3px 3px 8px rgba(255,255,255,1), inset -3px -6px 12px rgba(100,116,139,0.3); cursor: pointer; transition: transform 0.1s; } .bot-body:active { transform: scale(0.95); }
+        .plasma-flame { width: 7px; height: 22px; border-radius: 50%; filter: blur(1.5px); transform-origin: top; background: linear-gradient(to bottom, #ffffff 0%, #06b6d4 40%, transparent 100%); animation: flame-flicker 0.1s infinite alternate; transition: height 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); } @keyframes flame-flicker { 0% { transform: scaleY(1) scaleX(1); opacity: 0.8; } 100% { transform: scaleY(1.3) scaleX(0.8); opacity: 1; } } @keyframes flame-burst { 0% { transform: scaleY(1); opacity: 0.9; } 100% { transform: scaleY(1.4); opacity: 1; } }
+        .bot-face-container { width: 100%; height: 100%; position: absolute; inset: 0; pointer-events: none; transition: transform 0.1s ease-out; }
+        .state-idle { animation: bot-idle-float 3s infinite ease-in-out; } .state-idle .bot-arm-left { transform: rotate(10deg); } .state-idle .bot-arm-right { transform: rotate(-10deg); } .state-idle .bot-scan { animation: bot-scan 3s infinite linear; } .state-idle .bot-antenna-light { animation: pulse 2s infinite; } .state-idle .plasma-flame { height: 10px; background: linear-gradient(to bottom, #bae6fd 0%, #3b82f6 50%, transparent 100%); }
+        .state-patrol { animation: bot-free-flight 20s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95); } .state-patrol .bot-arm-left { animation: arm-swing-left 2s infinite ease-in-out; } .state-patrol .bot-arm-right { animation: arm-swing-right 2s infinite ease-in-out; } .state-patrol .bot-scan { animation: bot-scan 2.5s infinite linear; } .state-patrol .bot-antenna-light { animation: pulse 2s infinite; }
+        .state-interact { animation: bot-idle-float 3s infinite ease-in-out; z-index: 50; } .state-interact .bot-arm-left { transform: rotate(10deg); } .state-interact .bot-arm-right { transform: rotate(-10deg); } .state-interact .plasma-flame { height: 12px; background: linear-gradient(to bottom, #bae6fd 0%, #3b82f6 50%, transparent 100%); } .state-interact .bot-eye { transform: scaleY(0.2) !important; }
+        .state-computing { transform: translate(140px, -50px) scale(1.1) rotate(0deg) !important; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1); } .state-computing .bot-floater { animation: shake-violent 0.1s infinite linear; } .state-computing .bot-eye { background-color: #F97316 !important; box-shadow: 0 0 12px 4px rgba(249,115,22,0.8) !important; animation: blink-fast 0.1s infinite !important; } .state-computing .bot-antenna-light { background-color: #EF4444; box-shadow: 0 0 12px #EF4444; animation: blink-fast 0.1s infinite; } .state-computing .bot-scan { background: linear-gradient(90deg, transparent, rgba(249,115,22,0.6), transparent); animation: bot-scan 0.3s infinite linear; } .state-computing .bot-arm-left { transform: rotate(45deg); } .state-computing .bot-arm-right { transform: rotate(-45deg); } .state-computing .plasma-flame { height: 38px; filter: blur(2px); background: linear-gradient(to bottom, #ffffff 0%, #f59e0b 30%, #ef4444 80%, transparent 100%); animation: flame-burst 0.05s infinite alternate; }
+        .state-success { transform: translate(140px, -60px) scale(1.1) rotate(0deg) !important; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); } .state-success .bot-eye { background-color: #10B981 !important; box-shadow: 0 0 12px 4px rgba(16,185,129,0.8) !important; transform: scaleY(0.2) !important; } .state-success .bot-antenna-light { background-color: #10B981; box-shadow: 0 0 10px #10B981; } .state-success .bot-arm-left { transform: rotate(140deg) translateY(-10px); transition: transform 0.3s; } .state-success .bot-arm-right { transform: rotate(-140deg) translateY(-10px); transition: transform 0.3s; } .state-success .bot-scan { animation: bot-scan 2s infinite linear; background: linear-gradient(90deg, transparent, rgba(16,185,129,0.3), transparent); } .state-success .plasma-flame { height: 15px; }
+        .state-alert { animation: bot-free-flight 5s infinite ease-in-out; } .state-alert .bot-eye { background-color: #EF4444 !important; box-shadow: 0 0 12px 4px rgba(239,68,68,0.8) !important; animation: blink-fast 0.1s infinite !important; } .state-alert .bot-antenna-light { background-color: #EF4444; box-shadow: 0 0 12px #EF4444; animation: blink-fast 0.1s infinite; } .state-alert .bot-scan { background: linear-gradient(90deg, transparent, rgba(239,68,68,0.4), transparent); animation: bot-scan 1s infinite linear; } .state-alert .plasma-flame { height: 18px; background: linear-gradient(to bottom, #fca5a5 0%, #ef4444 50%, transparent 100%); }
+        @keyframes blink-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } } @keyframes shake-violent { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(1px, -2px) rotate(1deg); } }
+        
+        #botSmartBubble { bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%) scale(0.9); transform-origin: bottom center; transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 100; min-width: max-content;} #botSmartBubble.bubble-show { opacity: 1 !important; transform: translateX(-50%) scale(1); pointer-events: auto; } #botSmartBubbleText { transition: opacity 0.2s ease-in-out; }
+        #botSmartBubble.dialog-right { left: 100%; bottom: 10px; transform: translateX(12px) scale(0.9); transform-origin: left bottom; } #botSmartBubble.dialog-right.bubble-show { transform: translateX(12px) scale(1); } #botSmartBubble.dialog-right .bubble-tail { left: -6px; bottom: 20px; transform: rotate(45deg); border-bottom: none; border-right: none; border-top: 1px solid rgba(99, 102, 241, 0.4); border-left: 1px solid rgba(99, 102, 241, 0.4); }
+        .bubble-content { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(99, 102, 241, 0.4); box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.15); transition: border-color 0.3s; } .bubble-tail { position: absolute; width: 14px; height: 14px; bottom: -7px; left: 50%; transform: translateX(-50%) rotate(45deg); background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(99, 102, 241, 0.4); border-right: 1px solid rgba(99, 102, 241, 0.4); z-index: -1; transition: border-color 0.3s; }
+        .skin-gold .bot-eye, .skin-gold .bot-antenna-light { background-color: #FCD34D !important; box-shadow: 0 0 12px #FCD34D !important; } .skin-gold .plasma-flame { background: linear-gradient(to bottom, #ffffff 0%, #F59E0B 40%, transparent 100%) !important; } .skin-gold .bubble-content, .skin-gold .bubble-tail { border-color: rgba(252,211,77,0.5) !important; } .skin-gold .bot-scan { background: linear-gradient(90deg, transparent, rgba(252,211,77,0.4), transparent) !important; }
+        .skin-cyber .bot-eye, .skin-cyber .bot-antenna-light { background-color: #F43F5E !important; box-shadow: 0 0 12px #F43F5E !important; } .skin-cyber .plasma-flame { background: linear-gradient(to bottom, #ffffff 0%, #E11D48 40%, transparent 100%) !important; } .skin-cyber .bubble-content, .skin-cyber .bubble-tail { border-color: rgba(244,63,94,0.5) !important; } .skin-cyber .bot-scan { background: linear-gradient(90deg, transparent, rgba(244,63,94,0.4), transparent) !important; }
+        
+        #globalSearchModal { transition: opacity 0.2s, backdrop-filter 0.2s; } #globalSearchModal.active { display: flex; opacity: 1; backdrop-filter: blur(12px); } .search-result-item { transition: all 0.2s; } .search-result-item:hover { background: rgba(241, 245, 249, 0.8); transform: translateX(4px); }
+    </style>
+</head>
+<body class="font-sans min-h-screen flex flex-col antialiased relative">
+
+    <!-- 🔍 全局检索模态框 -->
+    <div id="globalSearchModal" class="fixed inset-0 z-[9999] bg-slate-900/40 hidden opacity-0 flex-col items-center pt-[15vh]">
+        <div class="w-full max-w-3xl bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white overflow-hidden flex flex-col transform transition-transform duration-300 scale-95" id="searchBoxCore">
+            <div class="flex items-center px-6 py-4 border-b border-slate-200 gap-4">
+                <i class="fa-solid fa-magnifying-glass text-xl text-indigo-500"></i>
+                <input type="text" id="globalSearchInput" oninput="window.handleGlobalSearchInput(event)" class="flex-1 bg-transparent border-none outline-none text-lg text-slate-800 font-medium placeholder-slate-400" placeholder="极速溯源：输入单号 / 商品名称 / 发货站...">
+                <button onclick="window.closeGlobalSearch()" class="text-slate-400 hover:text-rose-500 transition-colors px-2"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="bg-slate-50/50 p-2 text-[11px] text-slate-500 font-medium flex justify-between border-b border-slate-100">
+                <span>从底层 <span id="searchPoolSize" class="text-indigo-600 font-bold">0</span> 条流水中毫秒级检索</span>
+                <span>按 <kbd class="px-1.5 py-0.5 bg-white border border-slate-200 rounded shadow-sm">ESC</kbd> 退出</span>
+            </div>
+            <div id="searchResults" class="max-h-[50vh] overflow-y-auto custom-scrollbar p-2 bg-white">
+                <div class="py-12 flex flex-col items-center justify-center text-slate-400 opacity-70"><i class="fa-solid fa-keyboard text-4xl mb-3"></i><p class="text-sm font-bold">开始键入查询</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🤖 右键控制台 -->
+    <div id="botContextMenu" class="hidden fixed z-[10000] bg-slate-900/90 backdrop-blur border border-slate-700 rounded-xl shadow-2xl p-2 flex-col gap-1 text-xs font-bold text-slate-300 w-40 transform transition-all duration-200 scale-95 opacity-0 origin-top-left pointer-events-auto">
+        <div class="px-2 py-1 text-[10px] text-slate-500 border-b border-slate-700/50 mb-1 flex items-center justify-between"><span>Astro-Bot 控制台</span> <i class="fa-solid fa-gear"></i></div>
+        <button class="hover:bg-indigo-600 hover:text-white px-2 py-2 rounded text-left flex items-center gap-2 transition-colors" onclick="window.changeBotSkin('blue')"><span class="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]"></span> 初始深海蓝</button>
+        <button class="hover:bg-amber-600 hover:text-white px-2 py-2 rounded text-left flex items-center gap-2 transition-colors" onclick="window.changeBotSkin('gold')"><span class="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_#fbbf24]"></span> 尊贵流光金</button>
+        <button class="hover:bg-rose-600 hover:text-white px-2 py-2 rounded text-left flex items-center gap-2 transition-colors" onclick="window.changeBotSkin('cyber')"><span class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_#f43f5e]"></span> 赛博黑客红</button>
+        <div class="h-px bg-slate-700/50 my-1"></div>
+        <button class="hover:bg-emerald-600 hover:text-white px-2 py-2 rounded text-left flex items-center gap-2 transition-colors" onclick="window.dockBotToCabin()"><i class="fa-solid fa-plane-arrival text-emerald-300 w-3"></i> 召回驾驶舱</button>
+        <button id="btnToggleSleep" class="hover:bg-slate-700 hover:text-white px-2 py-2 rounded text-left flex items-center gap-2 transition-colors" onclick="window.toggleBotSleep()"><i class="fa-solid fa-moon text-indigo-300 w-3"></i> 进入休眠模式</button>
+    </div>
+
+    <!-- 🤖 高危报警 -->
+    <div id="redAlertOverlay" class="fixed inset-0 z-[9900] pointer-events-none hidden opacity-0 transition-opacity duration-500" style="box-shadow: inset 0 0 150px rgba(239, 68, 68, 0.8); background: radial-gradient(circle, transparent 50%, rgba(239, 68, 68, 0.1) 100%);"><div class="absolute inset-0 bg-rose-500/10 animate-pulse-fast"></div></div>
+
+    <!-- 🤖 全屏 AI 咨询室 -->
+    <div id="botFullscreenHub" class="fixed inset-0 z-[9950] hidden opacity-0 flex justify-center items-center bg-slate-900/60 backdrop-blur-md transition-all duration-500">
+        <div id="botHubContent" class="w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden transform translate-y-10 transition-all duration-500 h-[85vh] ml-auto mr-[5%] mt-[3%]">
+            <div class="bg-slate-800 px-6 py-4 flex justify-between items-center text-white shrink-0 shadow-md z-10"><div class="font-bold flex items-center gap-2"><i class="fa-solid fa-microchip text-indigo-400 animate-pulse"></i> Astro-Bot 数字咨询室</div><button onclick="window.closeBotHub()" class="text-slate-400 hover:text-rose-400 transition-colors"><i class="fa-solid fa-xmark text-2xl"></i></button></div>
+            <div class="p-6 flex flex-col gap-5 text-sm overflow-y-auto bg-slate-50/50 flex-1 custom-scrollbar scroll-smooth" id="botHubDialogue"></div>
+            <div id="botHubActions"></div>
+        </div>
+    </div>
+
+    <!-- 登陆页 -->
+    <div id="landing-page" class="fixed inset-0 z-[100] flex items-center justify-center landing-bg-minimal overflow-hidden transition-all duration-700">
+        <div class="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-indigo-500/10 rounded-full mix-blend-multiply filter blur-[120px] animate-blob pointer-events-none"></div>
+        <div class="absolute bottom-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-emerald-500/10 rounded-full mix-blend-multiply filter blur-[120px] animate-blob animation-delay-2000 pointer-events-none"></div>
+        <div class="relative z-10 flex flex-col items-center text-center w-full max-w-7xl px-6 transform transition-transform duration-700 hover:scale-[1.01]">
+            <div class="mb-10 relative flex justify-center items-center cursor-default mt-4 md:mt-8">
+                <div class="absolute w-28 h-28 md:w-36 md:h-36 rounded-full border-2 border-indigo-500/20 animate-pulse-ring pointer-events-none"></div>
+                <div class="w-24 h-24 md:w-28 md:h-28 rounded-full bg-white/90 backdrop-blur-md border border-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex items-center justify-center relative z-10"><i class="fa-solid fa-magnifying-glass-chart text-5xl md:text-[3.5rem] text-transparent bg-clip-text bg-gradient-to-br from-indigo-600 to-blue-500 drop-shadow-sm"></i></div>
+                <div class="absolute -top-1 -right-8 text-indigo-400 animate-bounce" style="animation-duration: 3s;"><i class="fa-solid fa-shield-halved text-xl drop-shadow-sm"></i></div>
+            </div>
+            <h1 class="text-[1.8rem] sm:text-4xl md:text-5xl lg:text-[3.4rem] xl:text-[4rem] font-black text-slate-900 tracking-tight mb-8 leading-tight whitespace-nowrap drop-shadow-sm">物流运费异常<span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-500">智能风控中台</span></h1>
+            <p class="text-slate-600 font-bold tracking-[0.2em] uppercase text-xs md:text-sm mb-12"><i class="fa-solid fa-bolt text-indigo-500"></i> Intelligent Freight Audit BI Final</p>
+            <button onclick="window.enterSystem()" class="group relative bg-slate-900/90 backdrop-blur-md border border-slate-700 text-white font-bold text-lg px-12 py-4 md:py-5 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.4)] ripple-btn">
+                <span class="relative z-10 flex items-center gap-3 tracking-wide">进入系统 <i class="fa-solid fa-arrow-right transition-transform duration-300 group-hover:translate-x-1.5"></i></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 顶部导航 -->
+    <header class="header-glass sticky top-0 z-50">
+        <div class="w-full mx-auto px-6 xl:px-10 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3 mr-4">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-indigo-600 shadow-md flex items-center justify-center text-white border border-indigo-400 cursor-pointer hover:rotate-180 transition-transform duration-700" onclick="window.showBotBubble('长官，我在屏幕上！', 4000)"><i class="fa-solid fa-microchip text-xl"></i></div>
+                    <div><h1 class="text-lg font-bold text-slate-800 leading-tight">智能审计中台</h1><p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Business Intelligence Final</p></div>
+                </div>
+                <nav class="flex h-full items-end gap-6" id="navMenu">
+                    <button onclick="window.switchTab('page-dashboard', this)" data-name="全景监控大屏" class="nav-btn h-full px-2 pb-4 text-sm font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors drop-shadow-sm ripple-btn"><i class="fa-solid fa-chart-line mr-1"></i> 全景大屏</button>
+                    <button onclick="window.switchTab('page-details', this)" data-name="异常明细下钻" class="nav-btn h-full px-2 pb-4 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 transition-colors ripple-btn"><i class="fa-solid fa-table-list mr-1"></i> 异常明细</button>
+                    <button onclick="window.switchTab('page-insight', this)" data-name="审计风控洞察" class="nav-btn h-full px-2 pb-4 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 transition-colors ripple-btn"><i class="fa-solid fa-chart-pie mr-1"></i> 风控洞察</button>
+                    <button onclick="window.switchTab('page-settings', this)" data-name="引擎与模型配置" class="nav-btn h-full px-2 pb-4 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-800 transition-colors ripple-btn"><i class="fa-solid fa-gears mr-1"></i> 引擎与模型配置</button>
+                </nav>
+            </div>
+            <div class="text-sm flex items-center gap-3">
+                <button onclick="window.openGlobalSearch()" class="btn-glass px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-indigo-600 flex items-center gap-2 ripple-btn"><i class="fa-solid fa-magnifying-glass"></i> <span class="hidden xl:inline">极速搜单</span> <kbd class="hidden xl:inline-block bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5 text-[10px] text-slate-400 font-sans">Ctrl K</kbd></button>
+                <div class="h-4 w-px bg-slate-200 mx-1"></div>
+                <button onclick="window.exportPDF()" class="btn-glass px-3 py-1.5 rounded-lg text-xs font-bold text-slate-700 hover:text-indigo-600 flex items-center gap-1.5 ripple-btn"><i class="fa-regular fa-file-pdf text-rose-500"></i> <span class="hidden md:inline">导出PDF</span></button>
+            </div>
+        </div>
+    </header>
+
+    <div class="w-full mx-auto px-6 xl:px-10 py-3 bg-white/40 border-b border-slate-200/60 flex items-center gap-2 text-xs font-medium text-slate-500 backdrop-blur-sm z-40 relative shadow-[0_4px_10px_rgba(0,0,0,0.01)]">
+        <i class="fa-solid fa-house text-indigo-400"></i> <span>智能审计中台</span> <i class="fa-solid fa-chevron-right text-[10px] text-slate-300 mx-1"></i> <span id="breadcrumbText" class="text-slate-800 font-bold">全景监控大屏</span>
+    </div>
+
+    <!-- 🤖 物理 Astro-Bot -->
+    <div id="astroBotMover" class="fixed z-[9900] flex flex-col items-center state-idle" style="bottom: 40px; left: 40px;">
+        <div id="botSmartBubble" class="absolute z-50 opacity-0 pointer-events-none">
+            <div class="bubble-content relative p-3 rounded-2xl text-xs font-medium text-slate-100 leading-relaxed break-words whitespace-normal tracking-wide text-center w-max max-w-[200px]">
+                <div id="botSmartBubbleText"></div>
+                <div id="botInteractiveMenu" class="hidden flex-col gap-1.5 mt-2 border-t border-slate-600/50 pt-2 pointer-events-auto">
+                    <button class="bot-ask-btn text-[10px] bg-slate-700/80 hover:bg-indigo-600 border border-slate-600 hover:border-indigo-400 rounded-lg px-2 py-1.5 text-left transition-colors flex justify-between items-center" onclick="window.askBot('worstSender')"><span>🔥 灾区在哪？</span> <i class="fa-solid fa-chevron-right text-[8px]"></i></button>
+                    <button class="bot-ask-btn text-[10px] bg-slate-700/80 hover:bg-indigo-600 border border-slate-600 hover:border-indigo-400 rounded-lg px-2 py-1.5 text-left transition-colors flex justify-between items-center" onclick="window.askBot('worstProduct')"><span>📦 啥容易错？</span> <i class="fa-solid fa-chevron-right text-[8px]"></i></button>
+                </div>
+                <div class="bubble-tail"></div>
+            </div>
+        </div>
+        <div class="bot-floater relative flex flex-col items-center w-full mt-2">
+            <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-14 h-2.5 bg-cyan-400/30 rounded-full blur-[6px]"></div>
+            <div class="absolute -bottom-[6px] left-[15px] w-2 h-2 bg-slate-800 rounded-b-md z-0 flex justify-center shadow-inner"><div class="plasma-flame mt-1"></div></div>
+            <div class="absolute -bottom-[6px] right-[15px] w-2 h-2 bg-slate-800 rounded-b-md z-0 flex justify-center shadow-inner"><div class="plasma-flame mt-1"></div></div>
+            <div class="absolute -top-3.5 left-[16px] w-[3px] h-4 bg-gradient-to-b from-slate-300 to-slate-500 rounded-t-full shadow-sm z-0 transform -rotate-[22deg] origin-bottom"><div class="bot-antenna-light absolute -top-1.5 -left-[2.5px] w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.8)] transition-colors duration-300"></div></div>
+            <div class="absolute -top-3.5 right-[16px] w-[3px] h-4 bg-gradient-to-b from-slate-300 to-slate-500 rounded-t-full shadow-sm z-0 transform rotate-[22deg] origin-bottom"><div class="bot-antenna-light absolute -top-1.5 -left-[2.5px] w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(34,211,238,0.8)] transition-colors duration-300"></div></div>
+            <div id="botBodyTrigger" class="bot-body relative w-[68px] h-[72px] rounded-t-[34px] rounded-b-[16px] flex flex-col items-center pt-4 z-10" title="拖拽移动，单击互动，双击聊天！">
+                <div class="absolute inset-0 rounded-t-[34px] rounded-b-[16px] bg-gradient-to-tr from-transparent via-white/50 to-transparent -skew-x-[20deg] opacity-60 pointer-events-none"></div>
+                <div class="relative w-[50px] h-[24px] bg-slate-900 rounded-full flex items-center justify-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.5),0_1px_2px_rgba(255,255,255,0.8)] overflow-hidden border border-slate-700/50 pointer-events-none">
+                    <div class="absolute top-0.5 left-2 w-8 h-2 bg-white/10 rounded-full -rotate-6 blur-[1px] z-20"></div>
+                    <div class="bot-face-container flex items-center justify-center gap-2.5 z-10">
+                        <div class="bot-scan absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent w-[150%] z-0"></div>
+                        <div class="bot-eye w-[6px] h-[6px] rounded-full bg-cyan-400 shadow-[0_0_8px_3px_rgba(34,211,238,0.8)] transition-colors duration-300 relative z-10"></div>
+                        <div class="bot-eye w-[6px] h-[6px] rounded-full bg-cyan-400 shadow-[0_0_8px_3px_rgba(34,211,238,0.8)] transition-colors duration-300 relative z-10"></div>
+                    </div>
+                </div>
+                <div class="mt-3 w-4 h-1.5 bg-indigo-500/30 rounded-full shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] border border-indigo-200/50 pointer-events-none"></div>
+            </div>
+            <div class="bot-arm-left absolute top-[28px] -left-[6px] w-[14px] h-[32px] bg-gradient-to-b from-slate-50 to-slate-300 rounded-full shadow-[-2px_2px_6px_rgba(0,0,0,0.2),inset_1px_1px_2px_white] border border-slate-300 origin-top z-0 pointer-events-none"></div>
+            <div class="bot-arm-right absolute top-[28px] -right-[6px] w-[14px] h-[32px] bg-gradient-to-b from-slate-50 to-slate-300 rounded-full shadow-[2px_2px_6px_rgba(0,0,0,0.2),inset_-1px_1px_2px_white] border border-slate-300 origin-top z-0 pointer-events-none"></div>
+        </div>
+    </div>
+
+    <!-- MAIN -->
+    <main class="w-full mx-auto px-6 xl:px-10 py-6 flex-1 relative z-10">
+        <!-- Dashboard -->
+        <div id="page-dashboard" class="tab-content active h-full">
+            <div class="grid grid-cols-1 xl:grid-cols-5 gap-6">
+                <aside class="xl:col-span-1 space-y-6">
+                    <div class="panel-glass rounded-2xl p-6 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-bl-full -z-10"></div>
+                        <h2 class="text-lg font-bold mb-5 text-slate-800 border-b border-white/60 pb-3 flex items-center gap-2"><i class="fa-solid fa-file-import text-indigo-500"></i>数据源接入区</h2>
+                        <div class="mb-5 relative z-10">
+                            <label for="fileInput" class="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer bg-white/50 hover:bg-white/80 hover:border-indigo-400 transition-all duration-300 group shadow-inner">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <div class="w-12 h-12 bg-white shadow-sm rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"><i class="fa-solid fa-file-excel text-2xl text-emerald-500"></i></div>
+                                    <p class="text-sm text-slate-700 font-semibold"><span class="text-indigo-600">点击 / 拖拽</span> 导入报表</p>
+                                    <p id="fileNameDisplay" class="mt-2 text-xs font-bold text-emerald-700 truncate max-w-[200px] hidden"></p>
+                                </div>
+                                <input id="fileInput" type="file" accept=".xlsx, .xls" onchange="window.handleFileSelect(this)" />
+                            </label>
+                        </div>
+                        <div class="space-y-3 relative z-10">
+                            <button onclick="window.downloadTemplate()" class="w-full btn-glass text-slate-700 font-semibold py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm ripple-btn"><i class="fa-regular fa-file-excel text-emerald-500"></i> 获取标准模版</button>
+                            <button onclick="window.processExcel()" class="w-full bg-slate-800/90 backdrop-blur-md hover:bg-black text-white font-bold py-3 px-4 rounded-xl shadow-lg border border-slate-700 transition-all duration-300 flex items-center justify-center gap-2 hover:-translate-y-0.5 ripple-btn"><i class="fa-solid fa-bolt text-yellow-400 drop-shadow"></i> 执行智能清洗</button>
+                            <button id="downloadBtn" onclick="window.exportResult()" style="display: none;" class="w-full btn-glass text-slate-700 font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 hover:-translate-y-0.5 ripple-btn"><i class="fa-solid fa-cloud-arrow-down text-indigo-500"></i> 导出分析报表</button>
+                        </div>
+                    </div>
+                    <div id="botCabin" onclick="window.dockBotToCabin();" class="bot-cabin rounded-2xl flex flex-col relative overflow-hidden h-[280px] cursor-pointer hover:border-indigo-500 border border-slate-700 shadow-xl transition-all">
+                        <div class="bot-cabin-grid"></div>
+                        <div class="absolute top-[-50px] right-[-50px] w-40 h-40 bg-indigo-500/30 rounded-full blur-[40px] z-0 pointer-events-none"></div>
+                        <div class="p-4 flex items-center justify-between relative z-10 border-b border-slate-700/50 bg-slate-900/60 backdrop-blur-md">
+                            <div><p class="text-[11px] text-slate-400 font-medium mb-1 tracking-wider uppercase">AI 引擎休眠舱</p><p id="statusText" class="text-sm font-bold text-white transition-colors duration-300">等待文件导入...</p></div>
+                            <div class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center border border-slate-600 shadow-inner"><i class="fa-solid fa-satellite-dish text-indigo-400 text-xs"></i></div>
+                        </div>
+                        <div id="botCabinCenter" class="flex-1 w-full flex flex-col items-center justify-center relative z-10">
+                            <div id="cabinEmptyTip" class="flex flex-col items-center text-slate-400 gap-3 opacity-40 transition-opacity duration-500"><i class="fa-solid fa-charging-station text-4xl"></i><p class="text-xs font-bold tracking-wider">Astro 正在外部巡航</p></div>
+                        </div>
+                    </div>
+                </aside>
+                <section class="xl:col-span-4 flex flex-col gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 min-h-[140px]">
+                        <div class="panel-glass panel-glow-indigo rounded-2xl p-6 relative overflow-hidden group flex flex-col h-full"><div class="flex items-center gap-2 mb-2 relative z-10"><div class="w-8 h-8 rounded bg-white shadow-sm border border-slate-100 flex items-center justify-center"><i class="fa-solid fa-server text-indigo-600 text-sm"></i></div><p class="text-sm text-slate-700 font-bold tracking-wider">总体扫描规模</p></div><div class="flex items-baseline gap-1 my-auto z-10"><span id="rawCount" class="text-5xl font-black text-slate-800 drop-shadow-sm">0</span><span class="text-sm font-bold text-slate-500 ml-1">行</span></div><i class="fa-solid fa-database absolute -bottom-2 -right-2 text-8xl text-slate-200/50 group-hover:scale-110 transition-transform pointer-events-none z-0"></i></div>
+                        <div class="panel-glass panel-glow-rose rounded-2xl p-6 relative overflow-hidden group flex flex-col h-full border-rose-200/50"><div class="flex items-center gap-2 mb-2 relative z-10"><div class="w-8 h-8 rounded bg-white shadow-sm border border-slate-100 flex items-center justify-center"><i class="fa-solid fa-triangle-exclamation text-rose-600 text-sm"></i></div><p class="text-sm text-rose-800 font-bold tracking-wider">当前展示异常</p></div><div class="flex items-baseline gap-1 my-auto z-10"><span id="resultCount" class="text-5xl font-black text-rose-600 drop-shadow-sm">0</span><span class="text-sm font-bold text-rose-500 ml-1">行</span></div><i class="fa-solid fa-shield-virus absolute -bottom-2 -right-2 text-8xl text-rose-200/50 group-hover:scale-110 transition-transform pointer-events-none z-0"></i></div>
+                        <div class="col-span-2 panel-glass panel-glow-emerald rounded-2xl p-6 flex flex-col h-full relative overflow-hidden"><div class="flex items-center gap-2 mb-4 relative z-10"><div class="w-8 h-8 rounded bg-white shadow-sm border border-slate-100 flex items-center justify-center"><i class="fa-solid fa-boxes-packing text-emerald-600 text-sm"></i></div><p class="text-sm text-slate-700 font-bold tracking-wider">产品线冲突全量分布</p></div><div id="productKpiContainer" class="flex flex-wrap gap-2.5 overflow-y-auto custom-scrollbar content-start flex-1 pr-2 pb-1 relative z-10"><span class="text-sm text-slate-500 font-medium mt-1">无数据加载</span></div></div>
+                    </div>
+                    <!-- Filter -->
+                    <div id="filter-container-page1" class="relative z-40">
+                        <div id="filterBarWrapper" class="hidden flex-col gap-3 relative z-40 w-full transition-all duration-300">
+                            <div id="filterBar" class="panel-glass rounded-xl p-3 flex items-center gap-4 w-full relative z-20">
+                                <h3 class="text-xs font-black text-slate-800 shrink-0 border-r border-slate-300 pr-3 drop-shadow-sm"><i class="fa-solid fa-filter text-indigo-600 mr-1"></i> 多维二级筛选</h3>
+                                <div class="flex-1 flex flex-wrap gap-3 items-center">
+                                    <div class="relative dropdown group" id="filter-product"><button class="btn-glass px-3 py-1.5 rounded-lg text-xs w-32 text-left flex justify-between items-center"><span class="text-slate-600 font-medium">产品线: <span class="btn-text font-bold text-slate-800">全部</span></span><i class="fa-solid fa-chevron-down text-slate-400"></i></button><div class="absolute top-full left-0 mt-1 w-48 panel-glass rounded-xl hidden z-50 p-2 dropdown-menu"><div class="checkbox-list max-h-48 overflow-y-auto flex flex-col gap-1 custom-scrollbar"></div></div></div>
+                                    <div class="relative dropdown group" id="filter-month"><button class="btn-glass px-3 py-1.5 rounded-lg text-xs w-28 text-left flex justify-between items-center"><span class="text-slate-600 font-medium">开单月: <span class="btn-text font-bold text-slate-800">全部</span></span><i class="fa-solid fa-chevron-down text-slate-400"></i></button><div class="absolute top-full left-0 mt-1 w-32 panel-glass rounded-xl hidden z-50 p-2 dropdown-menu"><div class="checkbox-list max-h-48 overflow-y-auto flex flex-col gap-1 custom-scrollbar"></div></div></div>
+                                    <div class="relative dropdown group" id="filter-day"><button class="btn-glass px-3 py-1.5 rounded-lg text-xs w-28 text-left flex justify-between items-center"><span class="text-slate-600 font-medium">开单日: <span class="btn-text font-bold text-slate-800">全部</span></span><i class="fa-solid fa-chevron-down text-slate-400"></i></button><div class="absolute top-full left-0 mt-1 w-32 panel-glass rounded-xl hidden z-50 p-2 dropdown-menu"><div class="checkbox-list max-h-48 overflow-y-auto flex flex-col gap-1 custom-scrollbar"></div></div></div>
+                                    <div class="relative dropdown group" id="filter-sender"><button class="btn-glass px-3 py-1.5 rounded-lg text-xs w-44 text-left flex justify-between items-center"><span class="text-slate-600 font-medium">发货站: <span class="btn-text font-bold text-slate-800">全部</span></span><i class="fa-solid fa-chevron-down text-slate-400"></i></button><div class="absolute top-full left-0 mt-1 w-64 panel-glass rounded-xl hidden z-50 p-2 dropdown-menu"><input type="text" class="input-glass w-full rounded mb-2 px-2 py-1.5 text-xs search-input" placeholder="搜索..." /><div class="checkbox-list max-h-48 overflow-y-auto flex flex-col gap-1 custom-scrollbar"></div></div></div>
+                                    <div class="relative dropdown group" id="filter-dest"><button class="btn-glass px-3 py-1.5 rounded-lg text-xs w-40 text-left flex justify-between items-center"><span class="text-slate-600 font-medium">目的地: <span class="btn-text font-bold text-slate-800">全部</span></span><i class="fa-solid fa-chevron-down text-slate-400"></i></button><div class="absolute top-full left-0 mt-1 w-64 panel-glass rounded-xl hidden z-50 p-2 dropdown-menu"><input type="text" class="input-glass w-full rounded mb-2 px-2 py-1.5 text-xs search-input" placeholder="搜索..." /><div class="checkbox-list max-h-48 overflow-y-auto flex flex-col gap-1 custom-scrollbar"></div></div></div>
+                                    <div class="ml-auto flex items-center gap-2"><button onclick="window.resetFilters()" class="btn-glass px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-500 hover:text-slate-800 ripple-btn transition-colors"><i class="fa-solid fa-rotate-right mr-1"></i> 重置</button></div>
+                                </div>
+                            </div>
+                            <div id="active-filters-tags" class="flex flex-wrap gap-2 px-1 relative z-10 empty:hidden"></div>
+                        </div>
+                    </div>
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 min-h-[700px] relative z-10">
+                        <div class="md:col-span-2 panel-glass panel-glow-indigo rounded-2xl p-5 h-full flex flex-col min-h-[350px] relative overflow-hidden group"><h3 class="text-sm font-bold text-slate-800 mb-2 flex items-center"><i class="fa-solid fa-chart-area text-indigo-600 mr-2"></i>运费异常波动日趋势</h3><p class="text-[10px] text-slate-400 mb-1 font-medium transition-opacity opacity-0 group-hover:opacity-100"><i class="fa-solid fa-hand-pointer text-indigo-400"></i> 支持点击数据点下钻明细</p><div id="chartLineTrend" class="chart-box flex-1 relative z-10 cursor-pointer"><div class="empty-state"><i class="fa-solid fa-chart-line empty-icon"></i><p class="text-slate-500 font-bold text-sm mb-3">暂无趋势数据</p></div></div></div>
+                        <div class="md:col-span-1 panel-glass panel-glow-amber rounded-2xl p-5 h-full flex flex-col min-h-[350px] relative overflow-hidden"><h3 class="text-sm font-bold text-slate-800 mb-2 flex items-center"><i class="fa-solid fa-circle-half-stroke text-amber-500 mr-2"></i>异常价格类型</h3><div id="chartPiePrice" class="chart-box flex-1 relative z-10"><div class="empty-state"><i class="fa-solid fa-chart-pie empty-icon"></i><p class="text-slate-500 font-bold text-sm">等待接入</p></div></div></div>
+                        <div class="md:col-span-1 panel-glass panel-glow-rose rounded-2xl p-5 h-full flex flex-col min-h-[350px] relative overflow-hidden group"><h3 class="text-sm font-bold text-slate-800 mb-2 flex items-center"><i class="fa-solid fa-ranking-star text-rose-500 mr-2"></i>发站异常榜 Top 8</h3><p class="text-[10px] text-slate-400 mb-1 font-medium transition-opacity opacity-0 group-hover:opacity-100"><i class="fa-solid fa-hand-pointer text-rose-400"></i> 支持点击柱子下钻</p><div id="chartBarSender" class="chart-box flex-1 relative z-10 cursor-pointer"><div class="empty-state"><i class="fa-solid fa-ranking-star empty-icon"></i><p class="text-slate-500 font-bold text-sm">等待接入</p></div></div></div>
+                        <div class="md:col-span-2 panel-glass panel-glow-emerald rounded-2xl p-5 h-full flex flex-col min-h-[350px] relative overflow-hidden group"><h3 class="text-sm font-bold text-slate-800 mb-2 flex items-center"><i class="fa-solid fa-map-location-dot text-emerald-500 mr-2"></i>异常订单目的地流向</h3><p class="text-[10px] text-slate-400 mb-1 font-medium transition-opacity opacity-0 group-hover:opacity-100"><i class="fa-solid fa-hand-pointer text-emerald-400"></i> 支持点击扇区下钻</p><div id="chartRoseDest" class="chart-box flex-1 relative z-10 cursor-pointer"><div class="empty-state"><i class="fa-solid fa-map-location-dot empty-icon"></i><p class="text-slate-500 font-bold text-sm">等待接入</p></div></div></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Details -->
+        <div id="page-details" class="tab-content flex-page h-full gap-4">
+            <div id="filter-container-page2" class="w-full shrink-0 relative z-40"></div>
+            <div class="panel-glass rounded-2xl flex flex-col flex-1 min-h-[500px] overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-200 bg-white/60 flex justify-between items-center relative z-10"><h2 class="text-base font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-table-list text-indigo-600"></i> 当前筛选异常明细</h2><span id="renderTip" style="display: none;" class="px-3 py-1 bg-amber-50 text-amber-600 border border-amber-200 rounded-lg text-xs font-bold flex items-center gap-1"><i class="fa-solid fa-bolt"></i> 仅展示前 100 行，导出获取完整版</span></div>
+                <div class="flex-1 overflow-auto p-0 bg-white custom-scrollbar" id="tableContainer">
+                    <table class="w-full text-left border-collapse text-sm whitespace-nowrap" id="dataTable">
+                        <thead class="bg-slate-800 text-white sticky top-0 z-20 shadow-md" id="tableHead"><tr><th class="px-6 py-4 font-bold text-center text-slate-200">等待加载</th></tr></thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-700" id="tableBody"><tr><td class="px-6 py-20 text-center" colspan="100"><div class="empty-state"><i class="fa-solid fa-folder-open empty-icon"></i><p class="text-slate-500 font-bold text-sm mb-3">暂无数据</p></div></td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Insight -->
+        <div id="page-insight" class="tab-content flex-page h-full gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
+                <div class="bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl shadow-md p-6 text-white relative overflow-hidden"><i class="fa-solid fa-database absolute right-0 bottom-0 text-8xl -mr-4 -mb-4 opacity-10"></i><p class="text-indigo-100 text-sm font-semibold mb-1">系统全量巡检基数</p><div class="flex items-end gap-2"><span id="kpi-total-scan" class="text-4xl font-black drop-shadow-md">0</span><span class="text-sm font-medium mb-1">单</span></div></div>
+                <div class="bg-gradient-to-br from-rose-500 to-red-600 rounded-2xl shadow-md p-6 text-white relative overflow-hidden"><i class="fa-solid fa-shield-virus absolute right-0 bottom-0 text-8xl -mr-4 -mb-4 opacity-10"></i><p class="text-rose-100 text-sm font-semibold mb-1">拦截确诊异常运单</p><div class="flex items-end gap-2"><span id="kpi-total-error" class="text-4xl font-black drop-shadow-md">0</span><span class="text-sm font-medium mb-1">单</span></div></div>
+                <div class="panel-glass rounded-2xl p-6 relative overflow-hidden flex flex-col justify-center"><i class="fa-solid fa-heart-pulse absolute right-0 bottom-0 text-8xl -mr-4 -mb-4 opacity-5 text-emerald-500"></i><p class="text-slate-600 text-sm font-bold mb-1">业务大盘合规健康度</p><div class="flex items-center gap-3 relative z-10"><span id="kpi-health-score" class="text-4xl font-black text-slate-400">-%</span><div class="flex-1 h-3 bg-slate-100 border border-slate-200 shadow-inner rounded-full overflow-hidden"><div id="kpi-health-bar" class="h-full bg-slate-300 w-full transition-all duration-1000"></div></div></div></div>
+            </div>
+            <div id="filter-container-page3" class="w-full shrink-0 relative z-40"></div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[400px] shrink-0">
+                <div class="panel-glass panel-glow-sky rounded-2xl p-5 flex flex-col h-full relative overflow-hidden"><h3 class="text-sm font-bold text-slate-800 mb-2"><i class="fa-solid fa-filter text-indigo-600 mr-2"></i>智能审计拦截漏斗转化率</h3><div id="chartInsightFunnel" class="chart-box flex-1 relative z-10"><div class="empty-state"><i class="fa-solid fa-filter empty-icon"></i><p class="text-slate-500 font-bold text-sm">等待数据接入</p></div></div></div>
+                <div class="panel-glass panel-glow-amber rounded-2xl p-5 flex flex-col h-full relative overflow-hidden"><h3 class="text-sm font-bold text-slate-800 mb-2"><i class="fa-regular fa-calendar-days text-orange-500 mr-2"></i>异常高发时段矩阵</h3><p class="text-[11px] text-slate-500 font-medium mb-2 relative z-10">气泡越大代表该日期的异常越密集。</p><div id="chartInsightHeatmap" class="chart-box flex-1 relative z-10"><div class="empty-state"><i class="fa-solid fa-calendar-days empty-icon"></i><p class="text-slate-500 font-bold text-sm">等待数据</p></div></div></div>
+            </div>
+            <div class="panel-glass rounded-2xl p-5 h-[650px] shrink-0 flex flex-col relative overflow-hidden bg-grid-pattern">
+                <div class="mb-4 relative z-10"><h3 class="text-sm font-bold text-slate-800 mb-1"><i class="fa-solid fa-sitemap text-rose-500 mr-2"></i>全局风险责任矩阵</h3><p class="text-[11px] text-slate-600 font-medium">各发货站按违规严重程度降序排列。卡片内展示产品线占比明细。</p></div>
+                <div id="insightCardMatrix" class="flex-1 overflow-y-auto custom-scrollbar pr-2 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 items-start content-start pb-4 relative z-10"><div class="col-span-full flex flex-col items-center justify-center h-full text-slate-500 mt-20"><i class="fa-solid fa-box-open text-4xl mb-3 opacity-50"></i><p class="text-sm font-bold">等待数据生成卡片...</p></div></div>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div id="page-settings" class="tab-content h-full">
+            <div class="max-w-[90rem] mx-auto pb-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start h-full"> 
+                <aside class="lg:col-span-4 flex flex-col gap-6 sticky top-6">
+                    <div class="panel-glass panel-glow-sky rounded-2xl p-6 flex flex-col gap-6 relative overflow-hidden">
+                        <h3 class="text-base font-black text-slate-800 border-b border-slate-200 pb-3 flex items-center gap-2"><i class="fa-solid fa-book-journal-whills text-indigo-600"></i> 配置白皮书</h3>
+                        <div class="space-y-2 relative z-10"><h4 class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> 1. 核心碰撞机理</h4><p class="text-xs text-slate-700 leading-relaxed bg-white/70 p-3 rounded-xl border border-white shadow-sm">引擎通过<b class="text-indigo-700">聚合依据</b>将运单强行分组。同组内若出现 ≥2 种不同的<b class="text-rose-700">判定值</b>，则判定为“异常”。</p></div>
+                        <div class="space-y-2 relative z-10 border-t border-white/60 pt-4 mt-2"><h4 class="text-sm font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-microchip text-blue-500"></i> 2. 双轨 AI 引擎能力</h4><p class="text-xs text-slate-700 leading-relaxed bg-white/70 p-3 rounded-xl border border-white shadow-sm"><b class="text-indigo-700">离线大脑 3.0：</b>完全不联网依然能对答如流！内置专业风控语料与意图识别树，支持底层模糊搜单。<br><b class="text-emerald-700 block mt-1">云端超算挂载：</b>配置外部 API 后，AI 会自动读取大盘摘要投喂给大模型，提供极度贴合业务的专业风控意见！</p></div>
+                    </div>
+                </aside>
+
+                <div class="lg:col-span-8 space-y-6">
+                    <!-- 顶层提示 -->
+                    <div class="panel-glass panel-glow-indigo rounded-2xl p-5 relative overflow-hidden border-indigo-200">
+                        <i class="fa-solid fa-hand-pointer absolute -right-4 -bottom-4 text-7xl text-indigo-500/10 pointer-events-none z-0"></i>
+                        <h3 class="text-sm font-bold text-indigo-900 mb-1 flex items-center gap-2 relative z-10"><i class="fa-solid fa-tags text-indigo-600"></i> 智能字段点选面板</h3>
+                        <p class="text-[11px] text-indigo-600/80 font-medium mb-3 relative z-10">点击下方捕捉到的 Excel 表头，可自动填入当前激活的输入框内。</p>
+                        <div id="headersDisplayBox" class="flex flex-wrap gap-2 relative z-10"><span class="text-xs text-indigo-700 font-medium px-3 py-1.5 bg-white/80 rounded-lg shadow-sm border border-white">请先在大屏导入数据报表即可在此捕捉表头...</span></div>
+                    </div>
+
+                    <!-- 规则模块 1 -->
+                    <div class="panel-glass rounded-2xl overflow-hidden relative">
+                        <div class="px-6 py-5 border-b border-slate-200 bg-white/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+                            <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center"><i class="fa-solid fa-microchip text-indigo-600 text-lg"></i></div><div><h2 class="text-base font-bold text-slate-800">模块一：底层核心运算规则</h2><p class="text-xs text-slate-600 font-medium mt-0.5">请严格对应上方捕捉到的字段名称进行填写。</p></div></div>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="window.setTplPrice()" class="btn-glass px-3 py-1.5 rounded-lg text-[11px] font-bold text-rose-600 hover:text-rose-700 ripple-btn shadow-sm border-rose-100"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> 价格冲突模型</button>
+                                <button type="button" onclick="window.setTplWeight()" class="btn-glass px-3 py-1.5 rounded-lg text-[11px] font-bold text-amber-600 hover:text-amber-700 ripple-btn shadow-sm border-amber-100"><i class="fa-solid fa-scale-balanced mr-1"></i> 体积异常模型</button>
+                            </div>
+                        </div>
+                        <div class="p-6 md:p-8 space-y-5 relative z-10">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div><label class="text-sm font-bold text-slate-800 mb-2 block">1. 聚合依据 (Group By)<span class="text-rose-600">*</span></label><input type="text" id="cfg-group" class="input-glass cfg-input w-full rounded-xl px-4 py-3 text-sm text-slate-800 font-medium"></div>
+                                <div><label class="text-sm font-bold text-slate-800 mb-2 block">2. 异常判定列 (Check 列)<span class="text-rose-600">*</span></label><input type="text" id="cfg-target" class="input-glass cfg-input w-full rounded-xl px-4 py-3 text-sm text-slate-800 font-medium" placeholder="⚠️ 只能填写一个列名"></div>
+                                <div><label class="text-sm font-bold text-slate-800 mb-2 block">3. 多级排序 (Order By)</label><input type="text" id="cfg-sort" class="input-glass cfg-input w-full rounded-xl px-4 py-3 text-sm text-slate-800 font-medium"></div>
+                                <div><label class="text-sm font-bold text-slate-800 mb-2 block">4. 高亮着色依据 (Color)</label><input type="text" id="cfg-color" class="input-glass cfg-input w-full rounded-xl px-4 py-3 text-sm text-slate-800 font-medium"></div>
+                                <div class="col-span-full border-t border-slate-200 mt-2 pt-4"><label class="block text-sm font-bold text-slate-800 mb-4">图表语义映射绑定 (将大屏固定分析维度与列名联通)</label></div>
+                                <div><label class="block text-xs font-bold text-slate-800 mb-1.5">【开单月】</label><input type="text" id="cfg-roleMonth" class="input-glass cfg-input w-full rounded-lg px-3 py-2.5 text-sm"></div>
+                                <div><label class="block text-xs font-bold text-slate-800 mb-1.5">【开单日】</label><input type="text" id="cfg-roleDay" class="input-glass cfg-input w-full rounded-lg px-3 py-2.5 text-sm"></div>
+                                <div><label class="block text-xs font-bold text-slate-800 mb-1.5">【发货站】</label><input type="text" id="cfg-roleSender" class="input-glass cfg-input w-full rounded-lg px-3 py-2.5 text-sm"></div>
+                                <div><label class="block text-xs font-bold text-slate-800 mb-1.5">【目的地】</label><input type="text" id="cfg-roleDest" class="input-glass cfg-input w-full rounded-lg px-3 py-2.5 text-sm"></div>
+                                <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-800 mb-1.5">【产品线】</label><input type="text" id="cfg-roleProduct" class="input-glass cfg-input w-full md:w-1/2 rounded-lg px-3 py-2.5 text-sm"></div>
+                            </div>
+                            <div class="flex justify-end items-center gap-4 mt-6 pt-4 border-t border-slate-200">
+                                <button type="button" onclick="window.resetEngineConfig()" class="btn-glass text-sm text-slate-600 font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 ripple-btn"><i class="fa-solid fa-rotate-left"></i> 恢复默认规则</button>
+                                <button type="button" onclick="window.saveEngineConfig()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-8 py-3 rounded-xl shadow-lg transition-colors flex items-center gap-2 ripple-btn"><i class="fa-solid fa-floppy-disk text-indigo-100"></i> 保存引擎规则</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 规则模块 2 -->
+                    <div class="panel-glass rounded-2xl overflow-hidden relative mt-6 border-indigo-200">
+                        <div class="px-6 py-5 border-b border-slate-200 bg-white/40 flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+                            <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-sm flex items-center justify-center text-white"><i class="fa-solid fa-brain text-lg"></i></div><div><h2 class="text-base font-bold text-slate-800">模块二：Astro-Bot AI 大脑挂载</h2><p class="text-xs text-slate-600 font-medium mt-0.5">接入大模型，赋予数字员工深度洞察能力 (与上方配置互相独立)。</p></div></div>
+                            <button type="button" onclick="window.testLLMConnection()" class="btn-glass px-4 py-2.5 rounded-xl text-xs font-bold text-indigo-700 hover:text-indigo-800 ripple-btn shadow-sm border-indigo-200 flex items-center gap-2"><i class="fa-solid fa-bolt text-amber-500"></i> 连通性测试 (Ping)</button>
+                        </div>
+                        <div class="p-6 md:p-8 space-y-6 relative z-10 bg-white/30">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-800 mb-1.5">1. 模型服务商 (Provider)</label>
+                                    <div class="relative"><select id="llm-provider" onchange="window.handleLLMProviderChange()" class="input-glass w-full rounded-xl px-4 py-3 text-sm text-slate-800 font-bold appearance-none cursor-pointer"><option value="custom">🎛️ 本地 / Cherry Studio</option><option value="ollama">💻 Ollama (本地内网部署)</option><option value="openai">🌐 OpenAI / 兼容协议</option><option value="deepseek">🐳 深度求索 (DeepSeek)</option><option value="qwen">☁️ 阿里云通义千问</option><option value="zhipu">🚀 智谱清言 (ChatGLM)</option><option value="kimi">🌙 月之暗面 (Kimi)</option><option value="baichuan">🌊 百川智能</option><option value="lingyi">✨ 零一万物</option><option value="stepfun">🌠 阶跃星辰</option></select><i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i></div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-800 mb-1.5 flex justify-between items-center"><span>2. 具体模型版本 (Model Name)</span><button type="button" id="btnFetchLocal" onclick="window.fetchLocalModels()" class="text-indigo-600 hover:text-indigo-800 text-[10px] bg-indigo-50 px-2 py-0.5 rounded shadow-sm border border-indigo-100 transition-all hover:bg-indigo-100"><i class="fa-solid fa-satellite-dish"></i> 探测模型</button></label>
+                                    <input type="text" id="llm-model" class="input-glass w-full rounded-xl px-4 py-3 text-sm font-bold" placeholder="如: gpt-4o">
+                                </div>
+                                <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-800 mb-1.5">3. 接口地址 (Base URL)</label><input type="text" id="llm-baseurl" class="input-glass w-full rounded-xl px-4 py-3 text-sm font-mono text-xs" placeholder="如: http://localhost:8080/v1"></div>
+                                <div class="md:col-span-2"><label class="block text-xs font-bold text-slate-800 mb-1.5">4. 身份密钥 (API Key)</label><div class="relative"><input type="password" id="llm-apikey" class="input-glass w-full rounded-xl px-4 py-3 text-sm font-mono text-xs" placeholder="sk-..."><button type="button" onclick="const i=document.getElementById('llm-apikey'); i.type=i.type==='password'?'text':'password'; this.innerHTML=i.type==='password'?'<i class=\'fa-solid fa-eye\'></i>':'<i class=\'fa-solid fa-eye-slash\'></i>';" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500"><i class="fa-solid fa-eye"></i></button></div></div>
+                            </div>
+                            <div class="pt-4 border-t border-slate-200/60">
+                                <div class="flex justify-between items-center mb-2"><label class="block text-xs font-bold text-slate-800"><i class="fa-solid fa-temperature-half text-rose-400 mr-1"></i> 温度 (Temperature)</label><span id="temp-val" class="text-xs font-black text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded shadow-sm border border-indigo-100">0.3</span></div>
+                                <input type="range" id="llm-temp" min="0" max="2" step="0.1" value="0.3" class="w-full accent-indigo-600 h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer" oninput="document.getElementById('temp-val').innerText=this.value">
+                            </div>
+                            <div class="flex justify-end items-center gap-4 mt-6 pt-4 border-t border-slate-200">
+                                <button type="button" onclick="window.saveLLMConfig()" class="bg-slate-800 hover:bg-black text-white text-sm font-bold px-8 py-3 rounded-xl shadow-lg transition-colors flex items-center gap-2 ripple-btn"><i class="fa-solid fa-floppy-disk text-emerald-400"></i> 保存 AI 模型配置</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<script>
+// ==========================================
+// 🛡️ 顶级防弹全局状态与配置 (挂载到 Window)
+// ==========================================
+window.DEFAULT_ENGINE_CONFIG = { group: "发货单位,开单月,开单日,目的地,商品名称", target: "直配价格方式", sort: "发货单位,开单月,开单日", color: "目的地", roleMonth: "开单月", roleDay: "开单日", roleSender: "发货单位", roleDest: "目的地", roleProduct: "产品线" };
+window.DEFAULT_LLM_CONFIG = { llmProvider: "openai", llmModel: "gpt-4o", llmBaseUrl: "https://api.openai.com/v1", llmApiKey: "", llmTemp: 0.3 };
+window.sysConfig = { ...window.DEFAULT_ENGINE_CONFIG, ...window.DEFAULT_LLM_CONFIG, ...(JSON.parse(localStorage.getItem('auditSysConfig')) || {}) };
+
+window.globalRawRows = []; window.allResultData = []; window.currentRenderData = []; window.allHeaders = [];
+window.botStatsDataPool = []; window.globalSenderStats = [];
+window.topSenderName = '无数据'; window.topProductName = '无数据'; window.finalHealthScore = 100;
+window.idxMonth = -1; window.idxDay = -1; window.idxSender = -1; window.idxDest = -1; window.idxProduct = -1; window.idxTarget = -1;
+window.eChartLine = null; window.eChartPie = null; window.eChartBar = null; window.eChartRose = null; window.eChartFunnel = null; window.eChartHeatmap = null;
+window._activeConfigInput = null; window.searchTimeout = null;
+
+window.appState = { isBotHovered: false, isMenuOpen: false, currentBotState: 'idle', prevBotState: 'idle', isBotSleeping: false, isHubOpen: false, hubMode: 'chat', isDocked: false, hideTimer: null };
+
+// ==========================================
+// 🛡️ 全局核心功能组件
+// ==========================================
+window.showToast = function(msg, type = 'success') {
+    const container = document.getElementById('toast-container') || (function(){ const c = document.createElement('div'); c.id = 'toast-container'; document.body.appendChild(c); return c; })();
+    const toast = document.createElement('div');
+    const icon = type === 'success' ? '<i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>' : (type === 'error' ? '<i class="fa-solid fa-circle-xmark text-rose-500 text-lg"></i>' : '<i class="fa-solid fa-info-circle text-blue-500 text-lg"></i>');
+    toast.className = `toast flex items-center gap-3 px-5 py-3.5 bg-white/95 backdrop-blur-md shadow-[0_10px_40px_rgba(0,0,0,0.1)] border-l-4 rounded-xl font-bold text-sm ${type==='success'?'border-emerald-500 text-slate-800':(type==='error'?'border-rose-500 text-rose-800':'border-blue-500 text-blue-800')}`;
+    toast.innerHTML = `${icon} <span>${msg}</span>`; container.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10); setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 400); }, 3500);
+}
+
+window.setStatus = function(text, isBlink) {
+    const s = document.getElementById('statusText'); if(!s) return;
+    s.innerText = text; s.className = "text-sm font-bold transition-colors duration-300"; 
+    if(text.includes("就绪")) s.classList.add("text-emerald-500"); else if(text.includes("崩溃")||text.includes("拦截")||text.includes("不匹配")) s.classList.add("text-rose-500"); else s.classList.add("text-primary");
+    if(isBlink) s.classList.add('animate-pulse-fast'); 
+}
+
+window.enterSystem = function() {
+    const l = document.getElementById('landing-page'); if(l) { l.classList.add('landing-exit'); setTimeout(() => { l.style.display = 'none'; document.body.style.overflow = ''; window.showToast('欢迎进入智能风控系统', 'info'); }, 700); }
+};
+
+window.switchTab = function(targetId, btn) {
+    document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('text-indigo-600','border-indigo-600','font-bold','drop-shadow-sm'); b.classList.add('text-slate-500','border-transparent','font-semibold'); });
+    btn.classList.remove('text-slate-500','border-transparent','font-semibold'); btn.classList.add('text-indigo-600','border-indigo-600','font-bold','drop-shadow-sm');
+    document.getElementById('breadcrumbText').innerText = btn.getAttribute('data-name');
+    document.querySelectorAll('.tab-content').forEach(c => { c.classList.remove('active'); if(c.id===targetId) c.classList.add('active'); });
+    const fW = document.getElementById('filterBarWrapper');
+    if(fW) { if(targetId==='page-dashboard') document.getElementById('filter-container-page1').appendChild(fW); else if(targetId==='page-details') document.getElementById('filter-container-page2').appendChild(fW); else if(targetId==='page-insight') document.getElementById('filter-container-page3').appendChild(fW); }
+    if(targetId==='page-dashboard'||targetId==='page-insight') setTimeout(window.resizeECharts, 50);
+};
+
+// ==========================================
+// 🛡️ Astro-Bot UI 与 AI 引擎
+// ==========================================
+window.showBotBubble = function(text, duration = 3000) { 
+    if (window.appState.isMenuOpen && window.appState.currentBotState !== 'computing') return;
+    const bText = document.getElementById('botSmartBubbleText'); const bubble = document.getElementById('botSmartBubble'); const menu = document.getElementById('botInteractiveMenu');
+    if(!bText || !bubble || !menu) return;
+    bText.style.opacity = '0'; setTimeout(() => { bText.innerHTML = text; bText.style.opacity = '1'; }, 150);
+    bubble.classList.add('bubble-show'); menu.classList.add('hidden');
+    clearTimeout(window.appState.hideTimer); 
+    if (duration > 0) { window.appState.hideTimer = setTimeout(() => { if(!window.appState.isBotHovered && window.appState.currentBotState !== 'computing' && !window.appState.isMenuOpen) bubble.classList.remove('bubble-show'); }, duration); } 
+}
+
+window.askBot = function(q) {
+    const menu = document.getElementById('botInteractiveMenu'); if(menu) { menu.classList.add('hidden'); menu.classList.remove('flex'); } window.appState.isMenuOpen = false;
+    if (q === 'worstSender') window.showBotBubble(`🚨 发现重灾区！<br><span class='text-rose-400 font-bold'>${window.topSenderName}</span> 的违规极其严重！`, 6000); 
+    else if (q === 'worstProduct') window.showBotBubble(`📦 运费最容易搞错的是 <span class='text-amber-400 font-bold'>${window.topProductName}</span>！`, 6000);
+}
+
+window.changeBotSkin = function(skin) {
+    const astroBot = document.getElementById('astroBotMover'); if(!astroBot) return;
+    astroBot.classList.remove('skin-blue', 'skin-gold', 'skin-cyber'); if(skin !== 'blue') astroBot.classList.add('skin-' + skin);
+    window.showBotBubble(`已为您切换涂装！`);
+}
+
+window.dockBotToCabin = function() {
+    if(window.appState.isHubOpen) return;
+    const cabin = document.getElementById('botCabinCenter'); const astroBot = document.getElementById('astroBotMover'); if(!cabin || !astroBot) return;
+    const rect = cabin.getBoundingClientRect(); if(rect.width === 0) { astroBot.style.transition = 'all 0.6s ease'; astroBot.style.left = '40px'; astroBot.style.top = 'auto'; astroBot.style.bottom = '40px'; return; }
+    
+    window.appState.isBotSleeping = false; window.appState.isDocked = true; 
+    const tip = document.getElementById('cabinEmptyTip'); if(tip) tip.style.opacity = '0';
+    astroBot.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    astroBot.style.left = (rect.left + rect.width/2 - 36) + 'px'; astroBot.style.top = (rect.top + rect.height/2 - 36) + 'px'; astroBot.style.bottom = 'auto'; astroBot.style.transform = 'scale(1)'; astroBot.style.opacity = '1'; astroBot.style.pointerEvents = 'auto';
+    
+    window.showBotBubble("已归航就绪！"); document.getElementById('btnToggleSleep').innerHTML = '<i class="fa-solid fa-moon text-indigo-300 w-3"></i> 进入休眠模式';
+    window.appState.currentBotState = 'idle'; window.appState.prevBotState = 'idle'; astroBot.className = 'fixed z-[9900] flex flex-col items-center state-idle';
+    setTimeout(()=> { if(window.appState.isDocked) astroBot.style.transition = 'none'; }, 600);
+}
+
+window.toggleBotSleep = function() {
+    const astroBot = document.getElementById('astroBotMover'); if(!astroBot) return;
+    if(!window.appState.isBotSleeping) {
+        if(!window.appState.isDocked) { window.showToast('正在强制召回...', 'info'); window.dockBotToCabin(); }
+        setTimeout(() => { 
+            window.appState.isBotSleeping = true;
+            astroBot.style.transition = 'all 0.5s ease'; astroBot.style.transform = 'scale(0.4)'; astroBot.style.opacity = '0.5'; astroBot.style.pointerEvents = 'none'; 
+            document.getElementById('btnToggleSleep').innerHTML = '<i class="fa-solid fa-sun text-amber-300 w-3"></i> 唤醒 Astro-Bot';
+            window.showBotBubble("休眠模式启动... zzz", 2000); 
+        }, window.appState.isDocked ? 0 : 600); 
+    } else {
+        window.appState.isBotSleeping = false;
+        astroBot.style.transition = 'all 0.5s ease'; astroBot.style.transform = 'scale(1)'; astroBot.style.opacity = '1'; 
+        document.getElementById('btnToggleSleep').innerHTML = '<i class="fa-solid fa-moon text-indigo-300 w-3"></i> 进入休眠模式';
+        window.appState.currentBotState = 'idle'; astroBot.style.pointerEvents = 'auto'; window.showBotBubble("Astro-Bot 随时待命！");
+    }
+}
+
+window.takeoverAlert = function() {
+    window.appState.isHubOpen = true; window.appState.hubMode = 'alert';
+    const rO = document.getElementById('redAlertOverlay'); const bH = document.getElementById('botFullscreenHub'); const bC = document.getElementById('botHubContent'); const astroBot = document.getElementById('astroBotMover');
+    if(!rO || !bH || !bC || !astroBot) return;
+    rO.classList.remove('hidden'); setTimeout(() => rO.classList.remove('opacity-0'), 10);
+    astroBot.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; astroBot.style.left = '50%'; astroBot.style.top = '20%'; astroBot.style.bottom = 'auto'; astroBot.style.transform = 'translate(-50%, -50%) scale(1.6)';
+    bH.classList.remove('hidden'); bC.className = 'w-full max-w-xl bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden transform translate-y-10 transition-all duration-500 max-h-[80vh]';
+    setTimeout(() => { bH.classList.remove('opacity-0'); bC.classList.remove('translate-y-10'); }, 10);
+    const worstSender = window.currentRenderData[0] ? String((window.currentRenderData[0].row||[])[window.idxSender]||'某地') : '未知发货站';
+    document.getElementById('botHubActions').className = "bg-white px-6 py-4 border-t border-slate-200 flex gap-3 shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]";
+    document.getElementById('botHubActions').innerHTML = `<button onclick="window.closeBotHub()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-xl shadow-lg transition-colors ripple-btn tracking-widest text-lg">解除警报并立即查处</button>`;
+    document.getElementById('botHubDialogue').innerHTML = `<div class="text-rose-600 font-black text-2xl flex items-center gap-2 mb-2 justify-center"><i class="fa-solid fa-triangle-exclamation animate-pulse"></i> 发现系统性高危异常！</div><div class="text-slate-700 leading-relaxed font-medium text-center text-base">大盘合规健康度跌至 <b class="text-rose-600 text-2xl">${window.finalHealthScore}%</b>，已击穿风控底线。</div><div class="mt-6 p-5 bg-rose-50 border border-rose-200 rounded-xl shadow-inner relative overflow-hidden"><i class="fa-solid fa-crosshairs absolute -right-4 -bottom-4 text-7xl text-rose-500/10"></i><div class="text-sm text-rose-500 font-bold mb-2 flex items-center gap-1.5"><i class="fa-solid fa-lock"></i> 自动为您捕获最高危节点：</div><div class="font-black text-rose-900 text-xl mb-2 flex items-center gap-2"><i class="fa-solid fa-building-user text-rose-400"></i> ${worstSender}</div><div class="text-sm text-rose-700 font-medium">已截获该站违规共 <b class="text-lg">${window.currentRenderData.length}</b> 单。疑似存在系统性漏洞，请立刻下钻明细追责！</div></div>`;
+}
+
+window.openChatHub = function() {
+    window.appState.isHubOpen = true; window.appState.hubMode = 'chat';
+    const bH = document.getElementById('botFullscreenHub'); const bC = document.getElementById('botHubContent'); const astroBot = document.getElementById('astroBotMover');
+    if(!bH || !bC || !astroBot) return;
+    astroBot.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; astroBot.style.left = '20%'; astroBot.style.top = '50%'; astroBot.style.bottom = 'auto'; astroBot.style.transform = 'translate(-50%, -50%) scale(1.6)';
+    bH.classList.remove('hidden'); bC.className = 'w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden transform translate-y-10 transition-all duration-500 h-[85vh] ml-auto mr-[5%] mt-[3%]';
+    setTimeout(() => { bH.classList.remove('opacity-0'); bC.classList.remove('translate-y-10'); }, 10);
+    document.getElementById('botHubDialogue').innerHTML = `<div class="flex gap-4 items-start animate-fadeIn"><div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(99,102,241,0.3)]"><i class="fa-solid fa-robot text-indigo-600 text-lg"></i></div><div class="bg-white border border-slate-200 rounded-2xl rounded-tl-none p-5 text-slate-700 font-medium leading-relaxed shadow-sm">指挥官您好！我是 Astro-Bot。您可以直接在下方与我交流。<br><br><i class="fa-solid fa-server text-indigo-500"></i> 如果您已连接 <b>大模型</b>，我将综合当前报表为您提供深度分析。<br><i class="fa-solid fa-wifi text-slate-400"></i> 即便 <b>完全断网</b>，我的内置超算引擎也支持：问大盘、查灾区、看趋势，以及输入单号的精准溯源！<div class="mt-4 flex flex-wrap gap-2"><button onclick="window.handleUserChat('大盘情况怎么样')" class="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 rounded-lg text-xs font-bold transition-colors shadow-sm">📊 查看大盘情况</button><button onclick="window.handleUserChat('异常高发时间是什么时候')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold transition-colors shadow-sm">⏰ 查异常高发日</button></div></div></div>`;
+    document.getElementById('botHubActions').className = "bg-slate-50 px-6 py-4 border-t border-slate-200 flex gap-3 shrink-0 shadow-[0_-4px_10px_rgba(0,0,0,0.02)] items-center";
+    document.getElementById('botHubActions').innerHTML = `<div class="flex-1 bg-white border border-slate-300 rounded-xl px-4 py-3 flex items-center shadow-sm focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-200 transition-all"><input type="text" id="aiChatInput" class="flex-1 outline-none border-none bg-transparent text-slate-800 placeholder-slate-400 font-medium" placeholder="输入想检索的订单号 / 业务问题..." onkeypress="if(event.key === 'Enter') window.handleUserChat(this.value)"><button onclick="window.handleUserChat(document.getElementById('aiChatInput').value)" class="ml-2 text-indigo-600 hover:text-indigo-800 transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-indigo-50"><i class="fa-solid fa-paper-plane"></i></button></div><button onclick="window.closeBotHub()" class="btn-glass bg-white px-4 py-3 rounded-xl font-bold text-slate-600 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 shadow-sm transition-colors w-24">退出</button>`;
+    setTimeout(() => document.getElementById('aiChatInput')?.focus(), 300);
+}
+
+window.closeBotHub = function() {
+    window.appState.isHubOpen = false; const rO = document.getElementById('redAlertOverlay'); const bH = document.getElementById('botFullscreenHub'); const bC = document.getElementById('botHubContent'); const astroBot = document.getElementById('astroBotMover');
+    if(rO) rO.classList.add('opacity-0'); if(bH) bH.classList.add('opacity-0'); if(bC) bC.classList.add('translate-y-10');
+    if(astroBot) {
+        astroBot.style.transition = 'all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; 
+        if(!window.appState.isDocked) { astroBot.style.left = '40px'; astroBot.style.top = 'auto'; astroBot.style.bottom = '40px'; } astroBot.style.transform = '';
+        if(window.appState.hubMode === 'alert') { window.appState.currentBotState = 'patrol'; window.appState.prevBotState = 'patrol'; astroBot.classList.remove('state-interact','state-computing','state-success','state-alert'); astroBot.classList.add('state-patrol'); }
+    }
+    setTimeout(() => { if(rO) rO.classList.add('hidden'); if(bH) bH.classList.add('hidden'); if(window.appState.isDocked) window.dockBotToCabin(); }, 500);
+}
+
+window.handleUserChat = async function(text) {
+    text = text.trim(); if(!text) return;
+    const iE = document.getElementById('aiChatInput'); if(iE) iE.value = '';
+    const dG = document.getElementById('botHubDialogue');
+    dG.innerHTML += `<div class="flex gap-4 items-start mt-6 flex-row-reverse animate-fadeIn"><div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center shrink-0 shadow-md"><i class="fa-solid fa-user-tie text-white text-sm"></i></div><div class="bg-indigo-600 rounded-2xl rounded-tr-none p-4 text-white font-medium shadow-md max-w-[80%] break-words">${text}</div></div>`;
+    setTimeout(()=>dG.scrollTop=dG.scrollHeight, 50);
+
+    const runOfflineEngine = () => {
+        const kw = text.toLowerCase(); let reply = ""; const hasData = window.globalRawRows && window.globalRawRows.length>0;
+        if (/谢谢|感谢|辛苦了/.test(kw)) reply = "不客气呀~ 能帮到你我也很开心，有什么需求随时跟我说哦！";
+        else if (/你好|在吗|是谁|干嘛|早上好|哈喽/.test(kw)) reply = "你好呀~ 我是智能审计助手，我可以帮你查订单、看大盘、分析异常哦！";
+        else if (/健康度评级|健康等级|数据状态/.test(kw)) reply = hasData ? `当前数据健康度评级为【${window.finalHealthScore}分】，整体数据状态为【${window.finalHealthScore>90?'正常':'需关注'}】。` : "暂无数据，请先导入报表。";
+        else if (/大盘|情况|总数|多少单|健康度/.test(kw)) reply = hasData ? `大盘情况：统计订单 <b>${window.globalRawRows.length}</b> 条，拦截异常 <b>${window.currentRenderData.length}</b> 条。健康度得分 <b>${window.finalHealthScore}%</b>。` : "大盘空空如也，请导入报表！";
+        else if (/什么时候|哪天|几号|趋势|高发/.test(kw)) {
+            if(!hasData) reply = "暂无数据，无法分析趋势。"; else {
+                const dC = {}; window.currentRenderData.forEach(i=>{ const d=window.idxDay!==-1?String((i.row||[])[window.idxDay]||'未知'):'未知'; dC[d]=(dC[d]||0)+1; });
+                let mD='未知', mV=0; for(let k in dC){ if(dC[k]>mV && k!=='未知'){ mV=dC[k]; mD=k; } }
+                reply = `异常高发日期为 <b>${mD}日</b>，共异常 <b>${mV}</b> 条；请结合大屏分析！`;
+            }
+        }
+        else if (/流向|目的地|地域|城市|发货单位/.test(kw)) reply = hasData ? `严重违规【发货单位】是 <b class="text-rose-600">${window.topSenderName}</b>。` : "暂无数据，无法分析。";
+        else if (/怎么用|教我|教程|导出/.test(kw)) reply = `直接告诉我单号，或按 [Ctrl+K] 极速搜单。导出数据请点击右上角 [导出PDF]。`;
+        else {
+            if (hasData) {
+                let cK = kw; ['查一下','看看','搜索','订单','的'].forEach(sw=>cK=cK.replace(new RegExp(sw,'g'),'')); cK=cK.trim();
+                const m = []; for(let i=0; i<window.globalRawRows.length; i++) { if(window.globalRawRows[i].some(c=>String(c||'').toLowerCase().includes(cK))) m.push(window.globalRawRows[i]); if(m.length>=20) break; }
+                if (m.length > 0) {
+                    reply = `模糊搜索到 <b class="text-indigo-600">${m.length}</b> 条记录。TOP 5：<br><div class="flex flex-col gap-2 mt-2">`;
+                    for(let i=0; i<Math.min(m.length, 5); i++) {
+                        const r=m[i]; const s=window.idxSender!==-1?String(r[window.idxSender]||'-'):'-'; const d=window.idxDest!==-1?String(r[window.idxDest]||'-'):'-';
+                        let oN='-'; let mL=0; r.forEach(c=>{const str=String(c||''); if(str.length>mL){mL=str.length; oN=str;}});
+                        reply += `<div class="bg-white p-2 rounded shadow-sm text-xs border border-slate-200"><b>${oN}</b> | ${s} ➔ ${d}</div>`;
+                    }
+                    reply += `</div>`;
+                } else reply = `未找到符合“<b>${cK}</b>”的订单，请换个词试试~`;
+            } else reply = `请先导入 Excel 报表我才能回答哦！`;
+        }
+        const mI = 'msg_'+Date.now();
+        dG.innerHTML += `<div class="flex gap-4 items-start mt-4 animate-fadeIn"><div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 shadow-sm"><i class="fa-solid fa-robot text-indigo-600"></i></div><div class="bg-indigo-50 rounded-2xl rounded-tl-none p-4 text-slate-800 font-medium shadow-sm max-w-[85%]" id="${mI}"><div class="text-indigo-400 text-xs"><i class="fa-solid fa-circle-notch fa-spin"></i> 离线引擎分析中...</div></div></div>`;
+        setTimeout(()=>dG.scrollTop=dG.scrollHeight,50);
+        setTimeout(()=>{ document.getElementById(mI).innerHTML=`<div class="mb-2 pb-2 border-b border-indigo-200/50 text-[10px] text-indigo-500 font-bold opacity-60"><i class="fa-solid fa-microchip"></i> 离线超算引擎回复</div>${reply}`; dG.scrollTop=dG.scrollHeight; },600);
+    };
+
+    const isL = window.sysConfig.llmBaseUrl && window.sysConfig.llmModel && (window.sysConfig.llmApiKey || window.sysConfig.llmProvider==='custom' || window.sysConfig.llmProvider==='ollama');
+    if (isL) {
+        const mI = 'msg_'+Date.now();
+        dG.innerHTML += `<div class="flex gap-4 items-start mt-4 animate-fadeIn" id="${mI}_wrapper"><div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center shrink-0 shadow-sm"><i class="fa-solid fa-robot text-indigo-600"></i></div><div class="bg-indigo-50 rounded-2xl rounded-tl-none p-4 text-slate-800 font-medium shadow-sm max-w-[85%]" id="${mI}"><div class="text-indigo-400 text-xs"><i class="fa-solid fa-circle-notch fa-spin"></i> 云端大模型算力调用中...</div></div></div>`;
+        try {
+            let url = window.sysConfig.llmBaseUrl.trim().replace(/\/$/, ''); if(!url.endsWith('/chat/completions')) url+='/chat/completions';
+            const h = {"Content-Type":"application/json"}; if(window.sysConfig.llmApiKey) h["Authorization"]=`Bearer ${window.sysConfig.llmApiKey}`;
+            
+            // 🚀 核心优化：动态 RAG 注入机制
+            let ctx = ""; 
+            if(window.globalRawRows && window.globalRawRows.length>0) {
+                let kw = text.replace(/查一下|看看|搜索|订单|的|怎么/g, '').trim().toLowerCase();
+                let match = kw ? window.globalRawRows.filter(r => r.some(c => String(c||'').toLowerCase().includes(kw))).slice(0, 15) : [];
+                let errs = window.currentRenderData.slice(0, 20).map(i=>i.row);
+                const fR = (r) => r.map(c=>String(c||'').substring(0,30).replace(/,/g,' ')).join(',');
+                ctx = `\n【数据上下文(含表头,相关记录及异常样本)】\n表头:${window.allHeaders.join(',')}\n`;
+                if(match.length>0) ctx += `\n检索到的相关全量记录:\n${match.map(fR).join('\n')}\n`;
+                if(errs.length>0) ctx += `\n典型异常数据样本:\n${errs.map(fR).join('\n')}\n`;
+            }
+            const sP = `你是物流智能风控专家AI。大盘:总单${window.globalRawRows.length},异常${window.currentRenderData.length},健康度${window.finalHealthScore}%,灾区[${window.topSenderName}],高发[${window.topProductName}]。请结合以下提供的数据上下文，精准回答用户，若问具体单号请从中提取。专业简练。` + ctx;
+            
+            const b = JSON.stringify({model:window.sysConfig.llmModel.trim(), messages:[{role:"system",content:sP}, {role:"user",content:text}], temperature:window.sysConfig.llmTemp||0.3});
+            const res = await fetch(url, {method:"POST",headers:h,body:b}); if(!res.ok) throw new Error("HTTP ERROR"); const data = await res.json();
+            document.getElementById(mI).innerHTML = `<div class="mb-2 pb-2 border-b border-indigo-200/50 text-[10px] text-emerald-600 font-bold"><i class="fa-solid fa-cloud"></i> 云端模型 [${window.sysConfig.llmModel}]</div>${data.choices[0].message.content.replace(/\n/g,'<br>')}`;
+        } catch(e) { document.getElementById(mI+'_wrapper')?.remove(); runOfflineEngine(); }
+    } else { runOfflineEngine(); }
+};
+
+// ==========================================
+// 🛡️ 配置与规则管理系统
+// ==========================================
+window.loadConfigToUI = function() {
+    if(!document.getElementById('cfg-group')) return;
+    document.getElementById('cfg-group').value = window.sysConfig.group || ''; document.getElementById('cfg-target').value = window.sysConfig.target || ''; document.getElementById('cfg-sort').value = window.sysConfig.sort || ''; document.getElementById('cfg-color').value = window.sysConfig.color || '';
+    document.getElementById('cfg-roleMonth').value = window.sysConfig.roleMonth || ''; document.getElementById('cfg-roleDay').value = window.sysConfig.roleDay || ''; document.getElementById('cfg-roleSender').value = window.sysConfig.roleSender || ''; document.getElementById('cfg-roleDest').value = window.sysConfig.roleDest || ''; document.getElementById('cfg-roleProduct').value = window.sysConfig.roleProduct || '';
+    document.getElementById('llm-provider').value = window.sysConfig.llmProvider || 'custom'; document.getElementById('llm-model').value = window.sysConfig.llmModel || ''; document.getElementById('llm-baseurl').value = window.sysConfig.llmBaseUrl || ''; document.getElementById('llm-apikey').value = window.sysConfig.llmApiKey || ''; document.getElementById('llm-temp').value = window.sysConfig.llmTemp || 0.3; document.getElementById('temp-val').innerText = window.sysConfig.llmTemp || 0.3;
+    window.handleLLMProviderChange(false);
+};
+
+window.insertHeaderToConfig = function(headerName) {
+    let activeInput = window._activeConfigInput || document.getElementById('cfg-group');
+    if(!activeInput) return window.showToast('请先点击下方任意一个配置输入框', 'error');
+    if(activeInput.id === 'cfg-target' || activeInput.id.startsWith('cfg-role')) activeInput.value = headerName; 
+    else { let v = activeInput.value.trim(); if(v && !v.endsWith(',')) v += ','; activeInput.value = v + headerName; }
+    window.showToast(`已填入字段：${headerName}`, 'info'); 
+    activeInput.focus(); activeInput.dispatchEvent(new Event('input'));
+};
+
+window.setTplPrice = function() { document.getElementById('cfg-group').value = "发货单位,开单月,开单日,目的地,商品名称"; document.getElementById('cfg-target').value = "直配价格方式"; window.showToast('已加载【价格模型】', 'info'); };
+window.setTplWeight = function() { document.getElementById('cfg-group').value = "发货单位,开单月,开单日,目的地"; document.getElementById('cfg-target').value = "计费体积"; window.showToast('已加载【体积模型】', 'info'); };
+
+window.saveEngineConfig = function() {
+    window.sysConfig = { ...window.sysConfig, group: String(document.getElementById('cfg-group').value), target: String(document.getElementById('cfg-target').value), sort: String(document.getElementById('cfg-sort').value), color: String(document.getElementById('cfg-color').value), roleMonth: String(document.getElementById('cfg-roleMonth').value), roleDay: String(document.getElementById('cfg-roleDay').value), roleSender: String(document.getElementById('cfg-roleSender').value), roleDest: String(document.getElementById('cfg-roleDest').value), roleProduct: String(document.getElementById('cfg-roleProduct').value) };
+    localStorage.setItem('auditSysConfig', JSON.stringify(window.sysConfig)); window.showToast('底层引擎规则已保存！', 'success'); 
+    if (window.globalRawRows && window.globalRawRows.length > 0) window.runEngine(window.globalRawRows);
+};
+
+window.resetEngineConfig = function() { 
+    if(confirm("确定恢复默认引擎规则吗？\n(您的 AI 大模型配置将被安全保留)")) { 
+        window.sysConfig = { ...window.sysConfig, ...window.DEFAULT_ENGINE_CONFIG }; window.loadConfigToUI(); window.showToast('已恢复默认引擎规则');
+    } 
+};
+
+window.saveLLMConfig = function() {
+    window.sysConfig = { ...window.sysConfig, llmProvider: document.getElementById('llm-provider').value, llmModel: document.getElementById('llm-model').value, llmBaseUrl: document.getElementById('llm-baseurl').value, llmApiKey: document.getElementById('llm-apikey').value, llmTemp: parseFloat(document.getElementById('llm-temp').value) };
+    localStorage.setItem('auditSysConfig', JSON.stringify(window.sysConfig)); window.showToast('AI 大模型配置已独立保存！', 'success'); 
+};
+
+window.LLM_PRESETS = { openai:{url:"https://api.openai.com/v1",model:"gpt-4o",k:true}, deepseek:{url:"https://api.deepseek.com/v1",model:"deepseek-chat",k:true}, qwen:{url:"https://dashscope.aliyuncs.com/compatible-mode/v1",model:"qwen-plus",k:true}, zhipu:{url:"https://open.bigmodel.cn/api/paas/v4",model:"glm-4",k:true}, kimi:{url:"https://api.moonshot.cn/v1",model:"moonshot-v1-8k",k:true}, baichuan:{url:"https://api.baichuan-ai.com/v1",model:"Baichuan4",k:true}, lingyi:{url:"https://api.lingyiwanwu.com/v1",model:"yi-large",k:true}, stepfun:{url:"https://api.stepfun.com/v1",model:"step-1-8k",k:true}, ollama:{url:"http://127.0.0.1:11434/v1",model:"llama3:8b",k:false}, custom:{url:"http://localhost:8080/v1",model:"",k:true} };
+
+window.handleLLMProviderChange = function(ow = true) {
+    const prov = document.getElementById('llm-provider').value; const p = window.LLM_PRESETS[prov]; const bL = document.getElementById('btnFetchLocal'); const kI = document.getElementById('llm-apikey');
+    if(prov==='ollama'||prov==='custom') bL.classList.remove('hidden'); else bL.classList.add('hidden');
+    if(p) { if(ow){ document.getElementById('llm-baseurl').value=p.url; document.getElementById('llm-model').value=p.model; } kI.disabled=!p.k; if(!p.k) kI.value=''; }
+};
+
+window.cleanApiUrl = (url) => { if(!url) return ""; let c = url.trim(); c = c.replace(/\/chat\/completions\/?$/, ''); c = c.replace(/\/completions\/?$/, ''); return c.replace(/\/$/, ''); };
+
+window.fetchLocalModels = async function() {
+    const prov = document.getElementById('llm-provider').value; let url = window.cleanApiUrl(document.getElementById('llm-baseurl').value); document.getElementById('llm-baseurl').value = url; 
+    const apiKey = document.getElementById('llm-apikey').value;
+    try {
+        window.showToast('探测可用模型...', 'info'); let res, data;
+        if (prov === 'ollama') { res = await fetch(url.replace('/v1', '')+'/api/tags'); data = await res.json(); if(data.models) window.renderModelList(data.models.map(m=>m.name)); else throw new Error("empty"); } 
+        else { const fetchOpt = apiKey?{headers:{"Authorization":`Bearer ${apiKey}`}}:{}; res = await fetch(url+(url.endsWith('/')?'models':'/models'), fetchOpt); data = await res.json(); if(data.data) window.renderModelList(data.data.map(m=>m.id)); else throw new Error("empty"); }
+    } catch(e) { window.showToast('探测失败！请确认服务与跨域', 'error'); }
+};
+
+window.renderModelList = function(names) {
+    window.showToast(`探测到 ${names.length} 个模型！`, 'success'); const mI = document.getElementById('llm-model'); let dl = document.getElementById('local-models-list');
+    if(!dl) { dl = document.createElement('datalist'); dl.id = 'local-models-list'; document.body.appendChild(dl); }
+    dl.innerHTML = names.map(m=>`<option value="${m}">`).join(''); mI.setAttribute('list', 'local-models-list'); mI.value = names[0]; mI.focus();
+};
+
+window.testLLMConnection = async function() {
+    let url = window.cleanApiUrl(document.getElementById('llm-baseurl').value); document.getElementById('llm-baseurl').value = url;
+    if(!url) return window.showToast('请先填写接口地址！', 'error');
+    const ab = document.getElementById('astroBotMover'); window.appState.currentBotState = 'computing'; if(ab) ab.className = 'fixed z-[9900] flex flex-col items-center state-computing'; window.showBotBubble("发送真实推理握手探针中...");
+    try {
+        const ak = document.getElementById('llm-apikey').value; const h = {"Content-Type":"application/json"}; if(ak) h["Authorization"]=`Bearer ${ak}`;
+        const body = JSON.stringify({model:document.getElementById('llm-model').value||'gpt-4o', messages:[{"role":"user","content":"hi"}], max_tokens:1});
+        const res = await fetch(url+'/chat/completions', {method:"POST",headers:h,body});
+        if(res.ok) { window.appState.currentBotState='success'; if(ab) ab.className='fixed z-[9900] flex flex-col items-center state-success'; window.showBotBubble(`握手成功！模型就绪`, 4000); window.showToast('连通成功！', 'success'); } 
+        else throw new Error("HTTP "+res.status);
+    } catch(e) { window.appState.currentBotState='alert'; if(ab) ab.className='fixed z-[9900] flex flex-col items-center state-alert'; window.showBotBubble(`握手被拒绝！`, 4000); window.showToast('连通失败', 'error'); }
+    setTimeout(() => { window.appState.currentBotState='idle'; if(ab) ab.className='fixed z-[9900] flex flex-col items-center state-idle'; }, 4000);
+};
+
+// ==========================================
+// 🛡️ 极速搜单系统
+// ==========================================
+window.openGlobalSearch = function() {
+    document.getElementById('searchPoolSize').innerText = window.globalRawRows ? window.globalRawRows.length : 0;
+    const modal = document.getElementById('globalSearchModal'); modal.classList.remove('hidden'); setTimeout(() => { modal.classList.add('active'); document.getElementById('globalSearchInput').focus(); }, 10);
+};
+window.closeGlobalSearch = function() { const modal = document.getElementById('globalSearchModal'); modal.classList.remove('active'); setTimeout(() => { modal.classList.add('hidden'); }, 200); };
+window.handleGlobalSearchInput = function(e) {
+    clearTimeout(window.searchTimeout); const kw = e.target.value.trim().toLowerCase(); const resBox = document.getElementById('searchResults');
+    if(!kw) { resBox.innerHTML='<div class="py-12 flex flex-col items-center justify-center text-slate-400 opacity-70"><i class="fa-solid fa-keyboard text-4xl mb-3"></i><p class="text-sm font-bold">开始键入查询</p></div>'; return; }
+    window.searchTimeout = setTimeout(() => {
+        if(!window.globalRawRows||window.globalRawRows.length===0) { resBox.innerHTML='<div class="py-12 flex flex-col items-center justify-center text-slate-400"><i class="fa-solid fa-database text-4xl mb-3"></i><p class="text-sm font-bold">请先导入报表</p></div>'; return; }
+        const matches=[]; for(let i=0;i<window.globalRawRows.length;i++){ if(window.globalRawRows[i].some(c=>String(c||'').toLowerCase().includes(kw))) matches.push(window.globalRawRows[i]); if(matches.length>100) break; }
+        if(matches.length===0) { resBox.innerHTML='<div class="py-12 flex flex-col items-center text-slate-400"><i class="fa-solid fa-ghost text-4xl mb-3"></i><p class="text-sm font-bold">未找到匹配项</p></div>'; return; }
+        let html=`<div class="text-xs text-indigo-600 font-bold mb-2 px-2">找到 ${matches.length} 条记录：</div>`;
+        matches.forEach(r => {
+            const sender=window.idxSender!==-1?String(r[window.idxSender]||'-'):'-'; const dest=window.idxDest!==-1?String(r[window.idxDest]||'-'):'-'; const tg=window.idxTarget!==-1?String(r[window.idxTarget]||'-'):'-';
+            let oN='-'; let mL=0; r.forEach(c=>{const s=String(c||''); if(s.length>mL){mL=s.length; oN=s;}});
+            html+=`<div class="bg-slate-50 border border-slate-200 rounded-lg p-3 mb-2 flex justify-between items-center"><div class="flex flex-col"><span class="font-black text-slate-800 text-sm">${oN}</span><span class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-truck-fast text-emerald-400"></i> ${sender} ➔ ${dest}</span></div><div class="px-2 py-1 bg-white border border-slate-200 shadow-sm rounded text-xs font-bold text-rose-600">${tg}</div></div>`;
+        }); resBox.innerHTML=html;
+    }, 300);
+};
+
+// ==========================================
+// 🛡️ Excel 解析与引擎输出体系 (带格式与动态扩容高亮还原)
+// ==========================================
+window.downloadTemplate = function() {
+    window.showToast('正在生成标准模板...', 'info');
+    try {
+        const aoa = [
+            ["发货单位", "产品线", "开单月", "开单日", "目的地", "外部单号", "大类", "商品名称", "直配价格方式", "数量", "体积", "结算数量", "调度计划", "调度时间", "收货单位", "收货地址"],
+            ["成都RDC总仓", "TCL智屏", "01", "01", "德阳市", "P260101016154-T-1-1", "彩电", "电视-65-65S11-JN-黑色", "C", 5, 1.166, 1.166, "J2601010009740", "0101", "德阳嘉逸欣晨商贸有限公司", "四川省德阳市旌阳区旌阳街道长江西路天猫分拨中心"],
+            ["成都RDC总仓", "TCL智屏", "01", "01", "德阳市", "P260101016867-T-1-1", "彩电", "电视-55-55S11-JN-黑色", "C", 5, 0.7225, 0.7225, "J2601010009740", "0101", "德阳嘉逸欣晨商贸有限公司", "四川省德阳市旌阳区旌阳街道长江西路天猫分拨中心"],
+            ["📝 字段整理指南：1.【开单月/开单日】需根据外部订单号或原表日期提取； 2.【调度时间】需根据调度计划单号提取； 3.【产品线】为系统大屏卡片必要维度，需结合实际业务分类插入。", "","","","","","","","","","","","","","",""]
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(aoa);
+        ws['!merges'] = [{ s: { r: 3, c: 0 }, e: { r: 3, c: 15 } }];
+        const bd = { top:{style:"thin",color:{rgb:"CBD5E1"}}, bottom:{style:"thin",color:{rgb:"CBD5E1"}}, left:{style:"thin",color:{rgb:"CBD5E1"}}, right:{style:"thin",color:{rgb:"CBD5E1"}} };
+        const hS = { font:{bold:true,color:{rgb:"FFFFFF"}}, fill:{fgColor:{rgb:"1E293B"}}, alignment:{horizontal:"center",vertical:"center"}, border:bd };
+        const bS = { alignment:{horizontal:"center",vertical:"center"}, border:bd };
+        const tS = { font:{bold:true,color:{rgb:"B45309"}}, fill:{fgColor:{rgb:"FEF9C3"}}, alignment:{horizontal:"left",vertical:"center"}, border:bd };
+        for(let r=0; r<4; r++){ for(let c=0; c<16; c++){ const addr=XLSX.utils.encode_cell({r,c}); if(!ws[addr]) ws[addr]={t:'s',v:''}; ws[addr].s = r===0?hS:(r===3?tS:bS); } }
+        ws['!cols'] = [{wch:15},{wch:12},{wch:8},{wch:8},{wch:10},{wch:22},{wch:8},{wch:25},{wch:12},{wch:8},{wch:8},{wch:10},{wch:18},{wch:10},{wch:25},{wch:40}];
+        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "审计模板"); XLSX.writeFile(wb, "物流智能审计标准模板.xlsx"); window.showToast('模板下载成功！', 'success');
+    } catch(e) { console.error(e); window.showToast('模板生成失败', 'error'); }
+};
+
+window.exportResult = function() {
+    if (!window.currentRenderData || window.currentRenderData.length === 0) return window.showToast('没有可导出数据', 'error');
+    window.showToast(`正在打包 ${window.currentRenderData.length} 条异常数据...`, 'info');
+    
+    setTimeout(() => {
+        try {
+            let maxCols = window.allHeaders.length;
+            const exportData = [window.allHeaders]; 
+            const colorMap = []; 
+            
+            window.currentRenderData.forEach((item, idx) => { 
+                if(item.row) { 
+                    exportData.push(item.row); 
+                    if (item.row.length > maxCols) maxCols = item.row.length; 
+                    colorMap[idx+1] = item.color; 
+                } 
+            });
+            
+            while(exportData[0].length < maxCols) { exportData[0].push("新增扩展列" + (exportData[0].length + 1)); }
+
+            const ws = XLSX.utils.aoa_to_sheet(exportData); 
+            const rowCount = exportData.length;
+            const colCount = maxCols;
+
+            const hS = { font:{bold:true,color:{rgb:"FFFFFF"}}, fill:{fgColor:{rgb:"1E293B"}}, alignment:{horizontal:"center",vertical:"center"}, border:{top:{style:"thin",color:{rgb:"CBD5E1"}},bottom:{style:"thin",color:{rgb:"CBD5E1"}},left:{style:"thin",color:{rgb:"CBD5E1"}},right:{style:"thin",color:{rgb:"CBD5E1"}}} };
+            const nS = { alignment:{horizontal:"center",vertical:"center"}, border:{top:{style:"thin",color:{rgb:"E2E8F0"}},bottom:{style:"thin",color:{rgb:"E2E8F0"}},left:{style:"thin",color:{rgb:"E2E8F0"}},right:{style:"thin",color:{rgb:"E2E8F0"}}} };
+            const yS = { fill:{fgColor:{rgb:"FEF9C3"}}, alignment:{horizontal:"center",vertical:"center"}, border:{top:{style:"thin",color:{rgb:"E2E8F0"}},bottom:{style:"thin",color:{rgb:"E2E8F0"}},left:{style:"thin",color:{rgb:"E2E8F0"}},right:{style:"thin",color:{rgb:"E2E8F0"}}} };
+            
+            for (let r=0; r<rowCount; r++) { 
+                for (let c=0; c<colCount; c++) { 
+                    const addr = XLSX.utils.encode_cell({r,c}); 
+                    if (!ws[addr]) ws[addr] = { t: 's', v: '' }; 
+                    if (r===0) ws[addr].s = hS; 
+                    else ws[addr].s = colorMap[r]==='yellow' ? yS : nS; 
+                } 
+            }
+            
+            ws['!ref'] = XLSX.utils.encode_range({s: {c: 0, r: 0}, e: {c: colCount - 1, r: rowCount - 1}});
+            
+            const wscols = []; for(let i=0; i<colCount; i++) wscols.push({wch:15}); ws['!cols'] = wscols;
+            const wb = XLSX.utils.book_new(); 
+            XLSX.utils.book_append_sheet(wb, ws, "异常明细"); 
+            XLSX.writeFile(wb, "物流运费异常核查明细清单.xlsx"); 
+            window.showToast('带高亮的分析报表导出成功！', 'success');
+        } catch(e) { 
+            console.error(e); 
+            window.showToast('导出失败，文件可能过大或被占用', 'error'); 
+        }
+    }, 100);
+};
+
+window.exportPDF = async function() {
+    if (window.allResultData.length === 0) return window.showToast('请先导入报表！', 'error');
+    window.showToast('正在渲染报告排版...', 'info');
+    try {
+        const target = document.getElementById('page-dashboard');
+        const titleDiv = document.createElement('div'); titleDiv.id = 'pdf-export-title'; titleDiv.innerHTML = `<h1 style="text-align:center; font-size:28px; font-weight:900; color:#1e293b; margin-bottom:10px; padding-top:15px; letter-spacing:2px;">物流运费智能审计洞察报告</h1><p style="text-align:center; font-size:12px; color:#64748b; margin-bottom:25px; font-weight:bold;">报告生成时间：${new Date().toLocaleString()} | 系统全量巡检基数：${window.globalRawRows.length}单 | 拦截确诊异常：${window.currentRenderData.length}单</p>`;
+        target.insertBefore(titleDiv, target.firstChild);
+        const canvas = await html2canvas(target, { scale: 1.5, useCORS: true, backgroundColor: '#f8fafc' });
+        target.removeChild(titleDiv);
+        const imgData = canvas.toDataURL('image/jpeg', 0.8); const pdf = new jspdf.jsPDF('p', 'mm', 'a4'); const pdfWidth = pdf.internal.pageSize.getWidth(); const pdfHeight = (canvas.height * pdfWidth) / canvas.width; const finalHeight = Math.min(pdfHeight, pdf.internal.pageSize.getHeight() - 10); 
+        pdf.addImage(imgData, 'JPEG', 0, 5, pdfWidth, finalHeight); pdf.save(`物流运费审计大盘报告_${Date.now()}.pdf`); window.showToast('PDF 导出成功！', 'success');
+    } catch(e) { const t=document.getElementById('pdf-export-title'); if(t)t.remove(); window.showToast('PDF 导出异常', 'error'); }
+};
+
+window.handleFileSelect = function(input) { const d=document.getElementById('fileNameDisplay'); if(input.files&&input.files[0]) { d.textContent="已就绪: "+input.files[0].name; d.classList.remove('hidden'); window.showToast(`已加载: ${input.files[0].name}`); } };
+window.renderHeadersTip = function(h) { const b=document.getElementById('headersDisplayBox'); if(b&&h&&h.length>0) b.innerHTML=h.map(n=>`<button type="button" onmousedown="event.preventDefault(); window.insertHeaderToConfig('${n}')" class="text-xs text-indigo-700 hover:text-white font-bold px-3 py-1.5 bg-white/90 hover:bg-indigo-500 rounded-lg border border-white hover:border-indigo-400 shadow-sm transition-all hover:-translate-y-0.5">${n}</button>`).join(''); };
+
+window.clearSkeletonsToEmpty = function() {
+    ['chartLineTrend','chartPiePrice','chartBarSender','chartRoseDest','chartInsightFunnel','chartInsightHeatmap'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML=`<div class="empty-state"><p class="text-slate-500 font-bold text-sm">解析挂起</p></div>`; });
+    const pC = document.getElementById('productKpiContainer'); if(pC) pC.innerHTML='<span class="text-slate-500 text-sm">状态已重置</span>';
+    const tB = document.getElementById('tableBody'); if(tB) tB.innerHTML='<tr><td colspan="100" class="text-center py-20"><div class="empty-state"><p class="text-slate-500 font-bold">请检查规则配置</p></div></td></tr>';
+    const iC = document.getElementById('insightCardMatrix'); if(iC) iC.innerHTML='<div class="col-span-full flex justify-center"><p class="text-slate-500 font-bold mt-10">无可用数据</p></div>';
+    document.getElementById('kpi-total-scan').innerText='0'; document.getElementById('kpi-total-error').innerText='0'; document.getElementById('kpi-health-score').innerText='-%'; document.getElementById('kpi-health-bar').style.width='100%'; document.getElementById('kpi-health-bar').className='h-full bg-slate-300 w-full transition-all duration-1000';
+    if(window.eChartLine)window.eChartLine.clear(); if(window.eChartPie)window.eChartPie.clear(); if(window.eChartBar)window.eChartBar.clear(); if(window.eChartRose)window.eChartRose.clear(); if(window.eChartFunnel)window.eChartFunnel.clear(); if(window.eChartHeatmap)window.eChartHeatmap.clear();
+};
+
+window.renderSkeleton = function() {
+    ['chartLineTrend','chartPiePrice','chartBarSender','chartRoseDest','chartInsightFunnel','chartInsightHeatmap'].forEach(id=>{ const el=document.getElementById(id); if(el) el.innerHTML='<div class="skeleton skeleton-chart"></div>'; });
+    const pC = document.getElementById('productKpiContainer'); if(pC) pC.innerHTML='<div class="skeleton skeleton-text" style="width:80px;"></div>';
+    const tB = document.getElementById('tableBody'); if(tB) tB.innerHTML=Array(6).fill('<tr><td colspan="100" class="px-5 py-2"><div class="skeleton skeleton-row"></div></td></tr>').join('');
+    const iC = document.getElementById('insightCardMatrix'); if(iC) iC.innerHTML=Array(3).fill('<div class="skeleton skeleton-chart" style="height:200px;"></div>').join('');
+};
+
+window.processExcel = function() {
+    const file = document.getElementById('fileInput').files[0]; if (!file) return window.showToast('请先导入 Excel 报表！', 'error');
+    window.setStatus("数据上行中...", true); window.renderSkeleton(); 
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, { type: 'array' }); const sheetName = workbook.SheetNames[0];
+            if (!sheetName) throw new Error("无工作表");
+            const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: '' });
+            let hIdx = -1; for(let i=0;i<jsonData.length;i++){ if(Array.isArray(jsonData[i])&&jsonData[i].some(c=>String(c).trim()!=='')){ hIdx=i; break; } }
+            if(hIdx===-1) throw new Error("无表头");
+            window.allHeaders = jsonData[hIdx].map(h=>h?String(h).trim():"");
+            window.globalRawRows = jsonData.slice(hIdx+1).filter(r=>Array.isArray(r)&&r.some(c=>String(c).trim()!=='')); 
+            if (window.globalRawRows.length===0) throw new Error("无数据行");
+            document.getElementById('rawCount').innerText = window.globalRawRows.length; 
+            window.renderHeadersTip(window.allHeaders); 
+            window.runEngine(window.globalRawRows); 
+        } catch (error) { window.setStatus("解析被拦截", false); window.showToast("解析失败: "+error.message, 'error'); window.clearSkeletonsToEmpty(); }
+    }; reader.readAsArrayBuffer(file);
+};
+
+window.filterDataOptimized = function(rows, gIdxs, tIdx) {
+    const map = new Map();
+    for (let r of rows) { if(!r) continue; const k=gIdxs.map(i=>r[i]).join('_'); if(!map.has(k)) map.set(k,{rows:[],t:new Set()}); map.get(k).rows.push(r); map.get(k).t.add(r[tIdx]); }
+    let res=[]; for (let v of map.values()) { if(v.t.size>1) res=res.concat(v.rows); } return res;
+};
+
+window.runEngine = function(rows) {
+    const pIdx = (s) => (s||"").split(',').map(x=>x.trim()).map(c=>window.allHeaders.indexOf(c)).filter(i=>i!==-1);
+    const gI = pIdx(window.sysConfig.group); const sI = pIdx(window.sysConfig.sort); const cI = pIdx(window.sysConfig.color);
+    window.idxTarget = window.allHeaders.indexOf(window.sysConfig.target?window.sysConfig.target.trim():""); 
+    window.idxMonth = window.allHeaders.indexOf(window.sysConfig.roleMonth?window.sysConfig.roleMonth.trim():""); 
+    window.idxDay = window.allHeaders.indexOf(window.sysConfig.roleDay?window.sysConfig.roleDay.trim():""); 
+    window.idxSender = window.allHeaders.indexOf(window.sysConfig.roleSender?window.sysConfig.roleSender.trim():""); 
+    window.idxDest = window.allHeaders.indexOf(window.sysConfig.roleDest?window.sysConfig.roleDest.trim():""); 
+    window.idxProduct = window.allHeaders.indexOf(window.sysConfig.roleProduct?window.sysConfig.roleProduct.trim():"");
+
+    if (gI.length===0||window.idxTarget===-1) { window.showToast('配置列未找到！', 'error'); window.setStatus("规则不匹配", false); window.clearSkeletonsToEmpty(); return; }
+
+    const ab = document.getElementById('astroBotMover'); window.appState.currentBotState = 'computing'; if(ab) ab.className = 'fixed z-[9900] flex flex-col items-center state-computing';
+    window.setStatus("双擎计算中...", true); window.showBotBubble("正在高维计算中...", 0);
+    
+    setTimeout(() => { 
+        try {
+            let fData = window.filterDataOptimized(rows, gI, window.idxTarget);
+            fData.sort((a,b)=>{ for(let i of sI){ let nA=Number(a[i]||""), nB=Number(b[i]||""); if(!isNaN(nA)&&!isNaN(nB)){ if(nA!==nB) return nA-nB; }else{ let c=String(a[i]||"").localeCompare(String(b[i]||"")); if(c!==0) return c; } } return 0; });
+            
+            window.allResultData = []; let cColor='white', lastK=null;
+            fData.forEach(r => { const k=cI.map(i=>r[i]).join('_'); if(lastK!==null&&k!==lastK) cColor=cColor==='white'?'yellow':'white'; lastK=k; window.allResultData.push({row:r,color:cColor}); });
+            window.currentRenderData = [...window.allResultData]; 
+            
+            window.initFilters(); window.updateDashboard(window.currentRenderData); window.updateInsightDashboard(window.globalRawRows, window.currentRenderData);
+            window.setStatus("解析完毕", false); document.getElementById('downloadBtn').style.display="flex"; document.getElementById('filterBarWrapper').classList.remove('hidden'); document.getElementById('filterBarWrapper').classList.add('flex'); 
+            
+            if (window.finalHealthScore < 70) { window.takeoverAlert(); window.showToast(`健康度跌至 ${window.finalHealthScore}%`, 'error'); } 
+            else { if(ab) ab.className='fixed z-[9900] flex flex-col items-center state-success'; if(window.finalHealthScore===100) window.showBotBubble("完美数据，0异常！",4000); else window.showBotBubble("清洗完毕！",3000); window.showToast(`锁定 ${window.currentRenderData.length} 条冲突记录`); setTimeout(()=>{window.appState.currentBotState='patrol'; if(ab) ab.className='fixed z-[9900] flex flex-col items-center state-patrol';}, 3000); }
+        } catch (e) { console.error(e); window.showToast("引擎崩溃！", 'error'); window.setStatus("安全熔断", false); window.clearSkeletonsToEmpty(); if(ab) ab.className='fixed z-[9900] flex flex-col items-center state-idle'; }
+    }, 800); 
+};
+
+// ==========================================
+// 🛡️ 图表与高级 UI 渲染引擎
+// ==========================================
+window.triggerDrillDown = function(t, v) { window.currentFilterState[t]=[v]; if(window[`renderUI_${t}`]) window[`renderUI_${t}`](); window.applyFilters(); document.querySelector('[data-target="page-details"]').click(); window.showToast(`已锁定: ${v}`, 'success'); };
+
+window.updateDashboard = function(data) {
+    document.getElementById('resultCount').innerText = data.length; 
+    const tH=document.getElementById('tableHead'); const tB=document.getElementById('tableBody');
+    if(window.allHeaders) tH.innerHTML = `<tr>${window.allHeaders.map(h=>`<th class="px-5 py-3 font-bold border-b border-slate-700 text-center">${h}</th>`).join('')}</tr>`;
+    let html=''; data.slice(0, 100).forEach(i=>{ const r=i.row||[]; html+=`<tr class="${i.color==='yellow'?'row-yellow':'row-white'} table-row-hover">${r.map(td=>`<td class="px-5 py-3 border-b border-slate-200 text-center text-slate-700 font-medium">${td!==undefined&&td!==null?td:''}</td>`).join('')}<td class="p-0 border-0 absolute h-full right-0 w-0"><div class="row-actions"><button class="action-btn" onclick="window.showToast('已标记','success')"><i class="fa-solid fa-flag text-rose-500"></i></button></div></td></tr>`; });
+    tB.innerHTML = html || `<tr><td colspan="100" class="text-center py-20"><div class="empty-state"><i class="fa-solid fa-inbox empty-icon"></i><p class="text-slate-500 font-bold">无明细</p></div></td></tr>`;
+    document.getElementById('renderTip').style.display = data.length>100?"flex":"none";
+    
+    const pC = document.getElementById('productKpiContainer');
+    if (window.idxProduct === -1) { if(pC) pC.innerHTML=`<span class="text-amber-600 font-bold">未映射</span>`; }
+    else {
+        const c={}; data.forEach(i=>{ const p=(i.row||[])[window.idxProduct]; const pN=p?String(p):'未知产品'; c[pN]=(c[pN]||0)+1; });
+        const sP=Object.entries(c).sort((a,b)=>b[1]-a[1]); window.topProductName=sP.length>0?sP[0][0]:'无数据'; window.botStatsDataPool=sP;
+        if(pC) pC.innerHTML=sP.map(([n,v],i)=>`<div class="px-3 py-1.5 border rounded-lg flex items-center gap-2 shadow-sm transition-transform hover:-translate-y-0.5 cursor-default ${i===0?'bg-rose-500 border-rose-400 text-white':(i===1?'bg-orange-500 border-orange-400 text-white':(i===2?'bg-amber-500 border-amber-400 text-white':'bg-white/80 border-white text-slate-800'))}"><span class="text-sm font-bold truncate max-w-[140px]">${n}</span><span class="text-sm font-black px-2 py-0.5 rounded border ${i===0?'bg-white text-rose-600':(i===1?'bg-white text-orange-600':(i===2?'bg-white text-amber-600':'bg-white text-slate-800 border-slate-100'))}">${v}</span></div>`).join('');
+    }
+
+    if (data.length > 0) { 
+        const dC={}, sC={}, dsC={}, tC={};
+        data.forEach(i=>{ const r=i.row||[]; dC[window.idxDay!==-1?String(r[window.idxDay]||'未知'):'未知']=(dC[window.idxDay!==-1?String(r[window.idxDay]||'未知'):'未知']||0)+1; sC[window.idxSender!==-1?String(r[window.idxSender]||'未知'):'未知']=(sC[window.idxSender!==-1?String(r[window.idxSender]||'未知'):'未知']||0)+1; dsC[window.idxDest!==-1?String(r[window.idxDest]||'未知'):'未知']=(dsC[window.idxDest!==-1?String(r[window.idxDest]||'未知'):'未知']||0)+1; tC[window.idxTarget!==-1?String(r[window.idxTarget]||'未知'):'未知']=(tC[window.idxTarget!==-1?String(r[window.idxTarget]||'未知'):'未知']||0)+1; });
+        const dK=Object.keys(dC).sort((a,b)=>Number(a)-Number(b)); const sL=Object.entries(sC).sort((a,b)=>a[1]-b[1]).slice(-8); const dsL=Object.entries(dsC).sort((a,b)=>b[1]-a[1]).slice(0,10);
+        
+        const tb={trigger:'item',backgroundColor:'rgba(255,255,255,0.95)',borderColor:'#e2e8f0',textStyle:{color:'#1e293b',fontWeight:'bold'}};
+
+        if(!window.eChartLine) window.eChartLine = echarts.init(document.getElementById('chartLineTrend')); window.eChartLine.setOption({ tooltip:{trigger:'axis',backgroundColor:'rgba(255,255,255,0.95)',borderColor:'#e2e8f0'}, grid:{left:'2%',right:'3%',bottom:'2%',top:'5%',containLabel:true}, xAxis:{type:'category', boundaryGap:false, data:dK.map(d=>d+'日'), axisLabel:{color:'#64748b',fontWeight:'bold'}}, yAxis:{type:'value', splitLine:{lineStyle:{type:'dashed',color:'rgba(203,213,225,0.6)'}}}, series:[{type:'line', smooth:true, symbolSize:6, data:dK.map(k=>dC[k]), lineStyle:{width:3,color:'#4F46E5'}, itemStyle:{color:'#4F46E5'}, areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(79,70,229,0.3)'},{offset:1,color:'rgba(79,70,229,0.05)'}])}}] }); window.eChartLine.off('click'); window.eChartLine.on('click', p=>{if(p.name!=='未知日')window.triggerDrillDown('day',p.name.replace('日',''))});
+        if(!window.eChartPie) window.eChartPie = echarts.init(document.getElementById('chartPiePrice')); window.eChartPie.setOption({ tooltip:{show:false}, color:['#F59E0B','#3B82F6','#10B981','#8B5CF6','#EC4899'], series:[{type:'pie', radius:['55%','80%'], avoidLabelOverlap:false, itemStyle:{borderRadius:4,borderColor:'#fff',borderWidth:2}, label:{show:false,position:'center'}, emphasis:{label:{show:true,formatter:'{name|{b}}\n{percent|{d}%}',rich:{name:{fontSize:28,fontWeight:'900',color:'inherit',padding:[0,0,4,0]},percent:{fontSize:13,fontWeight:'bold',color:'#64748b'}}}}, data:Object.entries(tC).map(([name,value])=>({name,value}))}] });
+        if(!window.eChartBar) window.eChartBar = echarts.init(document.getElementById('chartBarSender')); window.eChartBar.setOption({ tooltip:{trigger:'axis',axisPointer:{type:'shadow'},backgroundColor:'rgba(255,255,255,0.95)'}, grid:{left:'2%',right:'6%',bottom:'8%',top:'2%',containLabel:true}, xAxis:{type:'value',splitLine:{show:false},axisLabel:{show:false}}, yAxis:{type:'category', data:sL.map(i=>i[0]), axisLine:{show:false},axisTick:{show:false}, axisLabel:{color:'#475569',fontWeight:'bold',width:90,overflow:'truncate'}}, series:[{type:'bar', data:sL.map(i=>i[1]), barWidth:'55%',showBackground:true,backgroundStyle:{color:'rgba(241,245,249,0.8)',borderRadius:4}, itemStyle:{color:new echarts.graphic.LinearGradient(1,0,0,0,[{offset:0,color:'#F43F5E'},{offset:1,color:'#FDA4AF'}]),borderRadius:[0,4,4,0]}, label:{show:true,position:'right',color:'#F43F5E',fontWeight:'black'}}] }); window.eChartBar.off('click'); window.eChartBar.on('click', p=>{if(p.name!=='未知')window.triggerDrillDown('sender',p.name)});
+        if(!window.eChartRose) window.eChartRose = echarts.init(document.getElementById('chartRoseDest')); window.eChartRose.setOption({ tooltip:{...tb, formatter:p=>`<div style="margin-bottom:4px;font-weight:900;color:#1e293b;">${p.name}</div><div style="font-size:13px;margin-bottom:2px;">${p.marker} 异常量: <b style="color:#F43F5E">${p.value}</b> 项</div><div style="font-size:13px;">${p.marker} 占 比: <b style="color:#4F46E5">${p.percent}%</b></div>`}, color:['#10B981','#34D399','#6EE7B7','#0EA5E9','#38BDF8','#7DD3FC','#A78BFA'], series:[{name:'流向占比', type:'pie', roseType:'radius', radius:[20,'80%'], itemStyle:{borderRadius:4}, label:{color:'#475569',fontWeight:'bold',fontSize:11,formatter:'{b}'}, data:dsL.map(i=>({name:i[0],value:i[1]}))}] }); window.eChartRose.off('click'); window.eChartRose.on('click', p=>{if(p.name!=='未知')window.triggerDrillDown('dest',p.name)});
+    } else window.clearSkeletonsToEmpty();
+};
+
+window.updateInsightDashboard = function(rR, cR) {
+    if(!rR || !rR.length) return;
+    const tS=rR.length; const tE=cR.length; window.finalHealthScore = tS>0 ? (100-(tE/tS*100)).toFixed(1) : 100;
+    document.getElementById('kpi-total-scan').innerText=tS; document.getElementById('kpi-total-error').innerText=tE; document.getElementById('kpi-health-score').innerText=window.finalHealthScore+'%';
+    const hB=document.getElementById('kpi-health-bar'); hB.style.width=window.finalHealthScore+'%'; hB.className=`h-full ${window.finalHealthScore>90?'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]':(window.finalHealthScore>70?'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.3)]':'bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.3)]')} w-full transition-all duration-1000`;
+    
+    if(!window.eChartFunnel) window.eChartFunnel=echarts.init(document.getElementById('chartInsightFunnel')); if(!window.eChartHeatmap) window.eChartHeatmap=echarts.init(document.getElementById('chartInsightHeatmap'));
+    window.eChartFunnel.setOption({ tooltip:{trigger:'item',backgroundColor:'rgba(255,255,255,0.95)'}, color:['#818CF8','#38BDF8','#FB7185'], series:[{type:'funnel', left:'10%', top:'5%', bottom:'5%', width:'80%', gap:2, label:{show:true,position:'inside',formatter:'{b}\n{c}单',color:'#fff',fontWeight:'bold'}, itemStyle:{borderColor:'#fff',borderWidth:1,shadowBlur:10,shadowColor:'rgba(0,0,0,0.1)'}, data:[{value:tS,name:'全量数据'},{value:Math.floor(tS*0.95),name:'规则比对'},{value:tE,name:'确诊冲突'}]}] });
+
+    if(tE===0) { window.eChartHeatmap.clear(); document.getElementById('insightCardMatrix').innerHTML='<div class="col-span-full flex flex-col items-center justify-center text-slate-500 mt-10"><i class="fa-solid fa-box-open text-4xl mb-3 opacity-50"></i><p class="font-bold">完美数据，无归因卡片</p></div>'; return; }
+    
+    const tree={}; cR.forEach(i=>{ const r=i.row||[]; const s=window.idxSender!==-1?String(r[window.idxSender]||'未知'):'未知'; const p=window.idxProduct!==-1?String(r[window.idxProduct]||'未知'):'未知'; if(!tree[s])tree[s]={v:0,c:{}}; tree[s].v++; tree[s].c[p]=(tree[s].c[p]||0)+1; });
+    const sS=Object.entries(tree).sort((a,b)=>b[1].v-a[1].v); if(sS.length>0) window.topSenderName=sS[0][0];
+
+    let cHtml=''; sS.forEach((s,idx)=>{
+        const n=s[0]; const t=s[1].v; const pL=Object.entries(s[1].c).sort((a,b)=>b[1]-a[1]);
+        const bG=idx===0?'bg-rose-50/90 border-rose-300 text-rose-800':(idx===1?'bg-orange-50/90 border-orange-300 text-orange-800':(idx===2?'bg-amber-50/90 border-amber-300 text-amber-800':'bg-blue-50/70 border-blue-200 text-blue-800'));
+        const pC=idx===0?'bg-rose-500':(idx===1?'bg-orange-400':(idx===2?'bg-amber-400':'bg-blue-400'));
+        const bdC=idx===0?'bg-rose-500 text-white':(idx===1?'bg-orange-500 text-white':(idx===2?'bg-amber-500 text-white':'bg-white text-slate-600 border border-slate-200'));
+        const icn=idx===0?'<i class="fa-solid fa-crown mr-1.5 text-rose-500"></i>':(idx===1?'<i class="fa-solid fa-medal mr-1.5 text-orange-500"></i>':(idx===2?'<i class="fa-solid fa-award mr-1.5 text-amber-500"></i>':'<i class="fa-solid fa-building-circle-exclamation mr-1.5 opacity-60"></i>'));
+        let pHtml=''; pL.forEach(p=>{ const pN=p[0],pCt=p[1],pct=((pCt/t)*100).toFixed(1); pHtml+=`<div class="flex flex-col gap-1.5 mb-3 last:mb-0"><div class="flex justify-between items-end text-xs"><span class="text-slate-800 font-bold truncate pr-2 flex-1"><i class="fa-solid fa-box text-slate-400 mr-1.5 text-[10px]"></i>${pN}</span><span class="text-slate-600 text-[10px] shrink-0 font-medium"><b class="text-slate-900 text-xs font-black">${pCt}</b> 项 (${pct}%)</span></div><div class="w-full h-1.5 bg-white/80 rounded-full overflow-hidden border border-white shadow-inner"><div class="h-full ${pC} rounded-full" style="width:${pct}%"></div></div></div>`; });
+        cHtml+=`<div class="${bG} rounded-xl border p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col group hover:-translate-y-1"><div class="flex justify-between items-center mb-4 border-b border-white/80 pb-3"><h4 class="text-sm font-black break-words flex-1 pr-2 leading-tight flex items-center drop-shadow-sm">${icn}${n}</h4><span class="px-2.5 py-1 ${bdC} shadow-sm rounded-lg text-xs font-black shrink-0 tracking-wide">${t}项</span></div><div class="flex-1 w-full max-h-[220px] overflow-y-auto custom-scrollbar pr-1.5">${pHtml}</div></div>`;
+    }); document.getElementById('insightCardMatrix').innerHTML=cHtml;
+
+    const sD=[], mS=new Set(), dS=new Set(), hC={};
+    cR.forEach(i=>{ const r=i.row||[]; const m=window.idxMonth!==-1?String(r[window.idxMonth]||'未知'):'未知'; const d=window.idxDay!==-1?String(r[window.idxDay]||'未知'):'未知'; mS.add(m); dS.add(d); hC[`${d}_${m}`]=(hC[`${d}_${m}`]||0)+1; });
+    const ds=Array.from(dS).sort((a,b)=>Number(a)-Number(b)), ms=Array.from(mS).sort((a,b)=>Number(a)-Number(b));
+    ds.forEach((d,x)=>{ ms.forEach((m,y)=>{ const v=hC[`${d}_${m}`]||0; if(v>0) sD.push([x,y,v]); }); });
+    const mV = sD.length>0 ? Math.max(...sD.map(i=>i[2])) : 10;
+    window.eChartHeatmap.setOption({ tooltip:{position:'top',backgroundColor:'rgba(255,255,255,0.95)',formatter:p=>`<div style="color:#1e293b;font-weight:bold;">时间: ${ms[p.value[1]]}月${ds[p.value[0]]}日<br/>异常量: <b style="color:#F97316;font-size:16px;">${p.value[2]}</b> 单</div>`}, grid:{left:'3%',right:'4%',bottom:'3%',top:'8%',containLabel:true}, xAxis:{type:'category', data:ds.map(d=>d+'日'), splitArea:{show:true,areaStyle:{color:['rgba(250,250,250,0.5)','rgba(200,200,200,0.1)']}}, axisLine:{lineStyle:{color:'rgba(203,213,225,0.8)'}}, axisLabel:{color:'#475569',fontWeight:'bold'} }, yAxis:{type:'category', data:ms.map(m=>m+'月'), splitArea:{show:true}, axisLine:{show:false}, axisLabel:{color:'#475569',fontWeight:'bold'} }, visualMap:{show:false, min:0, max:mV, inRange:{color:['#FDE047','#F97316','#E11D48']}}, series:[{type:'scatter', symbolSize:v=>Math.max(10,(v[2]/mV)*35), data:sD, itemStyle:{shadowBlur:10,shadowColor:'rgba(225,29,72,0.3)',shadowOffsetY:5}}] });
+};
+
+window.initFilters = function() {
+    window.currentFilterState = { product: [], month: [], day: [], sender: [], dest: [] }; 
+    const o={ p:window.idxProduct!==-1?[...new Set(window.allResultData.map(d=>String((d.row||[])[window.idxProduct]||'')))].filter(Boolean):[], m:window.idxMonth!==-1?[...new Set(window.allResultData.map(d=>String((d.row||[])[window.idxMonth]||'')))].filter(Boolean).sort((a,b)=>a-b):[], d:window.idxDay!==-1?[...new Set(window.allResultData.map(d=>String((d.row||[])[window.idxDay]||'')))].filter(Boolean).sort((a,b)=>a-b):[], s:window.idxSender!==-1?[...new Set(window.allResultData.map(d=>String((d.row||[])[window.idxSender]||'')))].filter(Boolean).sort():[], ds:window.idxDest!==-1?[...new Set(window.allResultData.map(d=>String((d.row||[])[window.idxDest]||'')))].filter(Boolean).sort():[] };
+    const b = (id, opts, t) => {
+        const c=document.getElementById(id); if(!c) return; const btn=c.querySelector('.btn-text'), lst=c.querySelector('.checkbox-list');
+        if(!opts.length) { btn.innerText='无维度'; lst.innerHTML='<div class="text-xs text-slate-400 p-1">未匹配列</div>'; return; }
+        window[`renderUI_${t}`] = () => {
+            btn.innerText=window.currentFilterState[t].length===0?'全部':`已选(${window.currentFilterState[t].length})`; lst.innerHTML='';
+            opts.forEach(opt => {
+                const isC=window.currentFilterState[t].includes(opt)?'checked':''; const lbl=document.createElement('label'); lbl.className="flex items-center gap-2 text-xs p-1.5 hover:bg-slate-100 cursor-pointer rounded transition-colors font-bold text-slate-700";
+                lbl.innerHTML=`<input type="checkbox" value="${opt}" class="accent-indigo-600 w-3 h-3" ${isC}> <span class="truncate">${opt}</span>`;
+                lbl.querySelector('input').addEventListener('change', e=>{ if(e.target.checked)window.currentFilterState[t].push(opt); else window.currentFilterState[t]=window.currentFilterState[t].filter(v=>v!==opt); btn.innerText=window.currentFilterState[t].length===0?'全部':`已选(${window.currentFilterState[t].length})`; window.applyFilters(); });
+                lst.appendChild(lbl);
+            });
+        }; window[`renderUI_${t}`]();
+    };
+    b('filter-product', o.p, 'product'); b('filter-month', o.m, 'month'); b('filter-day', o.d, 'day'); b('filter-sender', o.s, 'sender'); b('filter-dest', o.ds, 'dest');
+};
+
+window.applyFilters = function() {
+    const s = window.currentFilterState;
+    window.currentRenderData = window.allResultData.filter(i => { const r=i.row||[]; return (s.product.length===0||s.product.includes(String(r[window.idxProduct]||''))) && (s.month.length===0||s.month.includes(String(r[window.idxMonth]||''))) && (s.day.length===0||s.day.includes(String(r[window.idxDay]||''))) && (s.sender.length===0||s.sender.includes(String(r[window.idxSender]||''))) && (s.dest.length===0||s.dest.includes(String(r[window.idxDest]||''))); });
+    window.updateDashboard(window.currentRenderData); window.updateInsightDashboard(window.globalRawRows, window.currentRenderData);
+    const box = document.getElementById('active-filters-tags'); if(box) box.innerHTML = Object.keys(s).flatMap(t=>s[t].map(v=>`<span class="inline-flex items-center px-2.5 py-1 rounded bg-indigo-50 text-[11px] font-bold text-indigo-700 shadow-sm border border-indigo-100 mr-2 group">${v} <i class="fa-solid fa-xmark ml-1 cursor-pointer text-indigo-400 group-hover:text-rose-500 transform group-hover:scale-110 transition-all" onclick="window.removeFilter('${t}','${v}')"></i></span>`)).join('');
+};
+
+window.removeFilter = function(t, v) { window.currentFilterState[t]=window.currentFilterState[t].filter(x=>x!==v); if(window[`renderUI_${t}`]) window[`renderUI_${t}`](); window.applyFilters(); };
+window.resetFilters = function() { window.initFilters(); window.currentRenderData=[...window.allResultData]; window.updateDashboard(window.currentRenderData); window.updateInsightDashboard(window.globalRawRows, window.currentRenderData); const b=document.getElementById('active-filters-tags'); if(b) b.innerHTML=''; window.showToast('筛选已重置'); };
+
+window.resizeECharts = function() {
+    if(document.getElementById('page-dashboard').classList.contains('active')){ if(window.eChartLine)window.eChartLine.resize(); if(window.eChartPie)window.eChartPie.resize(); if(window.eChartBar)window.eChartBar.resize(); if(window.eChartRose)window.eChartRose.resize(); } 
+    if(document.getElementById('page-insight').classList.contains('active')){ if(window.eChartFunnel)window.eChartFunnel.resize(); if(window.eChartHeatmap)window.eChartHeatmap.resize(); }
+};
+
+document.addEventListener('click', (e) => {
+    const isD = e.target.closest('button.text-left');
+    if(isD && isD.nextElementSibling) { const cM = isD.nextElementSibling; document.querySelectorAll('.dropdown-menu').forEach(m=>{if(m!==cM) m.classList.add('hidden')}); if(cM.classList.contains('dropdown-menu')) cM.classList.toggle('hidden'); } 
+    else if (!e.target.closest('.dropdown-menu')) { document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.add('hidden')); }
+});
+
+// ==========================================
+// 🛡️ 初始化：页面物理交互与组件启动
+// ==========================================
+document.addEventListener("DOMContentLoaded", () => {
+    window.loadConfigToUI();
+    document.addEventListener('keydown', (e) => { const modal = document.getElementById('globalSearchModal'); if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); window.openGlobalSearch(); } if (e.key === 'Escape' && modal && modal.classList.contains('active')) { window.closeGlobalSearch(); } });
+
+    const astroBot = document.getElementById('astroBotMover'); const botBodyTrigger = document.getElementById('botBodyTrigger'); const botMenu = document.getElementById('botContextMenu');
+    let isDragging = false, hasMoved = false, dragOffsetX = 0, dragOffsetY = 0, clickTimer = null;
+    if(botBodyTrigger) {
+        botBodyTrigger.addEventListener('mousedown', (e) => {
+            if(e.button !== 0 || window.appState.isBotSleeping || window.appState.isHubOpen || window.appState.currentBotState === 'computing') return;
+            isDragging = true; hasMoved = false; const rect = astroBot.getBoundingClientRect(); dragOffsetX = e.clientX - rect.left; dragOffsetY = e.clientY - rect.top; astroBot.style.transition = 'none'; document.body.style.cursor = 'grabbing'; e.preventDefault();
+        });
+        document.addEventListener('mousemove', (e) => {
+            if(!isDragging) return; hasMoved = true; if(window.appState.isDocked) { window.appState.isDocked = false; const tip = document.getElementById('cabinEmptyTip'); if(tip) tip.style.opacity = '0.4'; }
+            astroBot.style.bottom = 'auto'; astroBot.style.right = 'auto'; astroBot.style.left = (e.clientX - dragOffsetX) + 'px'; astroBot.style.top = (e.clientY - dragOffsetY) + 'px'; astroBot.classList.remove('state-idle', 'state-patrol', 'state-interact'); const flame = astroBot.querySelector('.plasma-flame'); if(flame) flame.style.height = '40px';
+        });
+        document.addEventListener('mouseup', (e) => {
+            if(isDragging) {
+                isDragging = false; document.body.style.cursor = 'default'; astroBot.style.transition = 'all 0.3s ease'; const flame = astroBot.querySelector('.plasma-flame'); if(flame) flame.style.height = '';
+                if(hasMoved) { if(!window.appState.isDocked) { window.appState.currentBotState = 'patrol'; window.appState.prevBotState = 'patrol'; astroBot.className = 'fixed z-[9900] flex flex-col items-center state-patrol'; } } 
+                else if(botBodyTrigger.contains(e.target)) {
+                    if(clickTimer) { clearTimeout(clickTimer); clickTimer = null; if(window.appState.currentBotState !== 'computing' && !window.appState.isBotSleeping) window.openChatHub(); } 
+                    else {
+                        clickTimer = setTimeout(() => {
+                            clickTimer = null; if (window.allResultData.length === 0) return window.showBotBubble("还没数据呢，快把报表拖进来喂给我！", 3000);
+                            window.appState.isMenuOpen = true; clearTimeout(window.appState.hideTimer); const botInteractiveMenu = document.getElementById('botInteractiveMenu'); if(botInteractiveMenu) { botInteractiveMenu.classList.remove('hidden'); botInteractiveMenu.classList.add('flex'); } window.showBotBubble("你想了解什么战情？", 0);
+                        }, 250);
+                    }
+                }
+            }
+        });
+    }
+    if(astroBot) {
+        astroBot.addEventListener('mouseenter', () => { 
+            if (window.appState.isMenuOpen || isDragging || window.appState.isBotSleeping) return;
+            window.appState.isBotHovered = true; 
+            if(window.appState.currentBotState !== 'computing' && window.appState.currentBotState !== 'alert' && window.appState.currentBotState !== 'interact') { window.appState.prevBotState = window.appState.currentBotState; window.appState.currentBotState = 'interact'; astroBot.classList.remove('state-idle', 'state-patrol'); astroBot.classList.add('state-interact'); document.getElementById('botSmartBubble').classList.add('dialog-right'); }
+            if(!window.appState.isMenuOpen) { if (window.botStatsDataPool.length > 0) { const item = window.botStatsDataPool[Math.floor(Math.random() * window.botStatsDataPool.length)]; window.showBotBubble(`点我可以问战情！<br><span class="text-slate-400 text-[10px]">最近截获：${item[0]} ${item[1]} 单</span>`, 0); } else { window.showBotBubble("嘿！快去导入 Excel 唤醒我！", 0); } }
+        });
+        astroBot.addEventListener('mouseleave', () => { 
+            window.appState.isBotHovered = false; 
+            if(window.appState.currentBotState !== 'computing' && !window.appState.isMenuOpen && !isDragging && !window.appState.isBotSleeping && !window.appState.isHubOpen) {
+                document.getElementById('botSmartBubble').classList.remove('bubble-show');
+                if (window.appState.currentBotState === 'interact') { window.appState.currentBotState = window.appState.prevBotState; document.getElementById('botSmartBubble').classList.remove('dialog-right'); astroBot.classList.remove('state-interact'); astroBot.classList.add('state-' + window.appState.currentBotState); }
+            } 
+        });
+        astroBot.addEventListener('contextmenu', (e) => { e.preventDefault(); if(window.appState.isHubOpen) return; botMenu.style.display = 'flex'; botMenu.style.left = e.clientX + 'px'; botMenu.style.top = e.clientY + 'px'; setTimeout(() => { botMenu.classList.remove('opacity-0', 'scale-95'); botMenu.classList.add('opacity-100', 'scale-100'); }, 10); });
+    }
+    document.addEventListener('click', (e) => {
+        if(botMenu && !botMenu.contains(e.target)) { botMenu.classList.remove('opacity-100', 'scale-100'); botMenu.classList.add('opacity-0', 'scale-95'); setTimeout(() => { botMenu.style.display = 'none'; }, 200); }
+        const botInteractiveMenu = document.getElementById('botInteractiveMenu');
+        if(window.appState.isMenuOpen && botBodyTrigger && !botBodyTrigger.contains(e.target) && botInteractiveMenu && !botInteractiveMenu.contains(e.target)) { 
+            window.appState.isMenuOpen = false; botInteractiveMenu.classList.add('hidden'); document.getElementById('botSmartBubble').classList.remove('bubble-show'); 
+            if(!window.appState.isBotHovered && window.appState.currentBotState === 'interact' && !window.appState.isHubOpen) { window.appState.currentBotState = window.appState.prevBotState; document.getElementById('botSmartBubble').classList.remove('dialog-right'); astroBot.classList.remove('state-interact'); astroBot.classList.add('state-' + window.appState.currentBotState); }
+        }
+    });
+
+    setInterval(() => { if (!window.appState.isBotHovered && window.appState.currentBotState !== 'computing' && !window.appState.isMenuOpen && window.appState.currentBotState !== 'alert' && !window.appState.isBotSleeping && !window.appState.isHubOpen) { const p = window.appState.currentBotState === 'idle' ? ["指挥官，我已随时待命！", "把我拖到屏幕中间玩玩吧！"] : ["反重力护航中...", "双击我调出全屏AI！"]; window.showBotBubble(p[Math.floor(Math.random() * p.length)], 4000); } }, 12000);
+    window.addEventListener('resize', () => { if(window.appState.isDocked) { const cabin = document.getElementById('botCabinCenter'); if(!cabin) return; const rect = cabin.getBoundingClientRect(); astroBot.style.transition = 'none'; astroBot.style.left = (rect.left + rect.width/2 - 36) + 'px'; astroBot.style.top = (rect.top + rect.height/2 - 36) + 'px'; } });
+    console.log("🚀 Astro-Bot AI System Final Visual Edition Fully Loaded.");
+});
+
+</script>
+</body>
+</html>
