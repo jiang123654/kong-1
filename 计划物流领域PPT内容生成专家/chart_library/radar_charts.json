@@ -1,0 +1,47 @@
+{
+  "radar_kpi": {
+    "name": "雷达图-多维度KPI",
+    "description": "用于多维度指标达成情况综合展示",
+    "适用页面": ["亮点展示页", "绩效评估页"],
+    "baseOption": {
+      "tooltip": {},
+      "legend": {
+        "bottom": 0,
+        "textStyle": { "color": "#4B5563", "fontSize": 11 },
+        "itemWidth": 14,
+        "itemHeight": 8
+      },
+      "radar": {
+        "shape": "polygon",
+        "splitNumber": 5,
+        "axisName": { "color": "#4B5563", "fontSize": 11 },
+        "splitLine": { "lineStyle": { "color": "#E5E7EB" } },
+        "splitArea": {
+          "areaStyle": { "color": ["rgba(243,244,246,0.3)", "rgba(255,255,255,0.3)"] }
+        },
+        "axisLine": { "lineStyle": { "color": "#E5E7EB" } }
+      },
+      "series": [{
+        "type": "radar",
+        "data": [
+          {
+            "name": "目标",
+            "lineStyle": { "color": "#9CA3AF" },
+            "areaStyle": { "color": "rgba(156, 163, 175, 0.2)" },
+            "itemStyle": { "color": "#9CA3AF" }
+          },
+          {
+            "name": "实际",
+            "lineStyle": { "color": "#E60012" },
+            "areaStyle": { "color": "rgba(230, 0, 18, 0.2)" },
+            "itemStyle": { "color": "#E60012" }
+          }
+        ]
+      }]
+    },
+    "indicators": {
+      "service": ["C单时效", "B单时效", "货损率", "客户满意度", "配送准确率", "异常处理时效"],
+      "cost": ["费用率", "仓储成本", "运输成本", "管理成本", "包装成本", "人工成本"]
+    }
+  }
+}

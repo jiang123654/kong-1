@@ -1,0 +1,126 @@
+{
+  "metadata": {
+    "slide_width": 13.333,
+    "slide_height": 7.5,
+    "unit": "inches",
+    "theme": "tcl_business"
+  },
+  "colors": {
+    "tcl_red": "E60012",
+    "tcl_red_light": "FEF2F2",
+    "navy": "1F2937",
+    "navy_light": "374151",
+    "success": "10B981",
+    "success_light": "ECFDF5",
+    "warning": "F59E0B",
+    "warning_light": "FFFBEB",
+    "danger": "EF4444",
+    "danger_light": "FEF2F2",
+    "info": "3B82F6",
+    "gray_50": "F9FAFB",
+    "gray_100": "F3F4F6",
+    "gray_200": "E5E7EB",
+    "gray_300": "D1D5DB",
+    "gray_400": "9CA3AF",
+    "gray_500": "6B7280",
+    "gray_600": "4B5563",
+    "gray_700": "374151",
+    "white": "FFFFFF"
+  },
+  "fonts": {
+    "title": "微软雅黑",
+    "body": "微软雅黑",
+    "title_size": 28,
+    "subtitle_size": 14,
+    "body_size": 12,
+    "small_size": 10
+  },
+  "layouts": {
+    "cover": {
+      "name": "封面页",
+      "title_position": { "left": 1.0, "top": 2.5, "width": 11.3, "height": 1.5 },
+      "subtitle_position": { "left": 1.0, "top": 4.0, "width": 11.3, "height": 0.8 },
+      "meta_position": { "left": 1.0, "top": 5.5, "width": 11.3, "height": 0.5 },
+      "decoration": {
+        "type": "rectangle",
+        "left": 0,
+        "top": 0,
+        "width": 13.333,
+        "height": 0.15,
+        "color": "tcl_red"
+      }
+    },
+    "overview": {
+      "name": "总览页",
+      "header_position": { "left": 0.8, "top": 0.4, "width": 11.7, "height": 1.0 },
+      "kpi_grid": {
+        "rows": 1,
+        "cols": 4,
+        "top": 1.6,
+        "left": 0.8,
+        "width": 11.7,
+        "height": 2.5,
+        "gap": 0.2
+      },
+      "points_position": { "left": 0.8, "top": 4.5, "width": 11.7, "height": 2.5 }
+    },
+    "data": {
+      "name": "数据页",
+      "header_position": { "left": 0.8, "top": 0.4, "width": 11.7, "height": 0.8 },
+      "chart_position": { "left": 0.8, "top": 1.4, "width": 7.0, "height": 3.5 },
+      "table_position": { "left": 8.0, "top": 1.4, "width": 4.5, "height": 3.5 },
+      "insight_position": { "left": 0.8, "top": 5.1, "width": 11.7, "height": 1.0 },
+      "note_position": { "left": 0.8, "top": 6.3, "width": 11.7, "height": 0.8 }
+    },
+    "rootcause": {
+      "name": "根因分析页",
+      "header_position": { "left": 0.8, "top": 0.4, "width": 11.7, "height": 0.8 },
+      "three_layer": {
+        "top": 1.4,
+        "left": 0.8,
+        "width": 11.7,
+        "height": 4.5,
+        "gap": 0.2
+      }
+    },
+    "cost": {
+      "name": "降本成果页",
+      "header_position": { "left": 0.8, "top": 0.4, "width": 11.7, "height": 0.8 },
+      "chart_position": { "left": 0.8, "top": 1.4, "width": 7.0, "height": 4.5 },
+      "table_position": { "left": 8.0, "top": 1.4, "width": 4.5, "height": 4.5 },
+      "summary_position": { "left": 0.8, "top": 6.1, "width": 11.7, "height": 1.0 }
+    },
+    "goals": {
+      "name": "目标分解页",
+      "header_position": { "left": 0.8, "top": 0.4, "width": 11.7, "height": 0.8 },
+      "chart_position": { "left": 0.8, "top": 1.4, "width": 7.0, "height": 4.0 },
+      "risks_position": { "left": 8.0, "top": 1.4, "width": 4.5, "height": 4.0 }
+    },
+    "project": {
+      "name": "项目进展页",
+      "header_position": { "left": 0.8, "top": 0.4, "width": 11.7, "height": 0.8 },
+      "gantt_position": { "left": 0.8, "top": 1.4, "width": 11.7, "height": 3.5 },
+      "milestones_position": { "left": 0.8, "top": 5.2, "width": 11.7, "height": 1.8 }
+    },
+    "highlights": {
+      "name": "亮点展示页",
+      "header_position": { "left": 0.8, "top": 0.4, "width": 11.7, "height": 0.8 },
+      "chart_position": { "left": 0.8, "top": 1.4, "width": 6.5, "height": 4.5 },
+      "factors_position": { "left": 7.5, "top": 1.4, "width": 5.0, "height": 4.5 }
+    }
+  },
+  "footer": {
+    "enabled": true,
+    "text": "TCL实业 · 计划物流部",
+    "position": { "left": 0.5, "top": 7.2, "width": 4.0, "height": 0.25 },
+    "font_size": 9,
+    "color": "gray_400"
+  },
+  "page_number": {
+    "enabled": true,
+    "position": { "left": 12.0, "top": 7.2, "width": 1.0, "height": 0.25 },
+    "font_size": 9,
+    "color": "gray_400",
+    "format": "{current} / {total}"
+  }
+}

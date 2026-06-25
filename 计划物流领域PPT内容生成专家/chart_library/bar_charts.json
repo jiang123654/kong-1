@@ -1,0 +1,108 @@
+{
+  "bar_comparison": {
+    "name": "分组柱状图-对比类",
+    "description": "用于预算vs实际、目标vs达成等对比场景",
+    "适用页面": ["数据页", "总览页", "目标分解页"],
+    "baseOption": {
+      "tooltip": {
+        "trigger": "axis",
+        "backgroundColor": "rgba(255, 255, 255, 0.95)",
+        "borderColor": "#E5E7EB",
+        "borderWidth": 1,
+        "textStyle": { "color": "#1F2937", "fontSize": 12 }
+      },
+      "grid": { "left": "3%", "right": "4%", "bottom": "3%", "top": "15%", "containLabel": true },
+      "legend": {
+        "top": 0,
+        "right": 0,
+        "textStyle": { "color": "#4B5563", "fontSize": 11 },
+        "itemWidth": 14,
+        "itemHeight": 8
+      },
+      "xAxis": {
+        "type": "category",
+        "axisLabel": { "color": "#4B5563", "fontSize": 11, "interval": 0 },
+        "axisLine": { "lineStyle": { "color": "#E5E7EB" } },
+        "axisTick": { "show": false }
+      },
+      "yAxis": {
+        "type": "value",
+        "nameTextStyle": { "color": "#9CA3AF", "fontSize": 11 },
+        "axisLabel": { "color": "#9CA3AF", "fontSize": 11 },
+        "splitLine": { "lineStyle": { "color": "#F3F4F6", "type": "dashed" } }
+      },
+      "series": [
+        {
+          "type": "bar",
+          "barWidth": "28%",
+          "itemStyle": { "color": "#9CA3AF", "borderRadius": [4, 4, 0, 0] }
+        },
+        {
+          "type": "bar",
+          "barWidth": "28%",
+          "itemStyle": { "borderRadius": [4, 4, 0, 0] }
+        }
+      ]
+    },
+    "dataMapping": {
+      "categories": "xAxis.data",
+      "series1Name": "legend.data[0]",
+      "series1Data": "series[0].data",
+      "series2Name": "legend.data[1]",
+      "series2Data": "series[1].data"
+    },
+    "colorRules": {
+      "series2": {
+        "logic": "if (actual > budget) return '#EF4444'; else return '#10B981';",
+        "description": "超标红、达标绿"
+      }
+    }
+  },
+  "bar_sorted": {
+    "name": "排序柱状图",
+    "description": "用于按大小排序的单系列数据展示",
+    "适用页面": ["降本成果页", "品类排名页"],
+    "baseOption": {
+      "tooltip": {
+        "trigger": "axis",
+        "backgroundColor": "rgba(255, 255, 255, 0.95)",
+        "borderColor": "#E5E7EB",
+        "borderWidth": 1,
+        "textStyle": { "color": "#1F2937", "fontSize": 12 }
+      },
+      "grid": { "left": "3%", "right": "10%", "bottom": "3%", "top": "5%", "containLabel": true },
+      "xAxis": {
+        "type": "value",
+        "axisLabel": { "color": "#9CA3AF", "fontSize": 11 },
+        "splitLine": { "lineStyle": { "color": "#F3F4F6", "type": "dashed" } }
+      },
+      "yAxis": {
+        "type": "category",
+        "axisLabel": { "color": "#4B5563", "fontSize": 11 },
+        "axisLine": { "show": false },
+        "axisTick": { "show": false }
+      },
+      "series": [{
+        "type": "bar",
+        "barWidth": "50%",
+        "itemStyle": {
+          "color": {
+            "type": "linear", "x": 0, "y": 0, "x2": 1, "y2": 0,
+            "colorStops": [
+              { "offset": 0, "color": "#E60012" },
+              { "offset": 1, "color": "#F87171" }
+            ]
+          },
+          "borderRadius": [0, 4, 4, 0]
+        },
+        "label": {
+          "show": true,
+          "position": "right",
+          "color": "#1F2937",
+          "fontSize": 11,
+          "fontWeight": "bold"
+        }
+      }]
+    }
+  }
+}

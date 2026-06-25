@@ -1,0 +1,58 @@
+{
+  "waterfall_cost": {
+    "name": "瀑布图-降本贡献拆解",
+    "description": "用于展示各项降本措施对总目标的贡献",
+    "适用页面": ["降本成果页", "目标分解页"],
+    "baseOption": {
+      "tooltip": {
+        "trigger": "axis",
+        "axisPointer": { "type": "shadow" },
+        "backgroundColor": "rgba(255, 255, 255, 0.95)",
+        "borderColor": "#E5E7EB",
+        "borderWidth": 1,
+        "textStyle": { "color": "#1F2937", "fontSize": 12 }
+      },
+      "grid": { "left": "3%", "right": "4%", "bottom": "8%", "top": "5%", "containLabel": true },
+      "xAxis": {
+        "type": "category",
+        "axisLabel": { "color": "#4B5563", "fontSize": 10, "interval": 0, "rotate": 15 },
+        "axisLine": { "lineStyle": { "color": "#E5E7EB" } },
+        "axisTick": { "show": false }
+      },
+      "yAxis": {
+        "type": "value",
+        "nameTextStyle": { "color": "#9CA3AF", "fontSize": 11 },
+        "axisLabel": { "color": "#9CA3AF", "fontSize": 11 },
+        "splitLine": { "lineStyle": { "color": "#F3F4F6", "type": "dashed" } }
+      },
+      "series": [
+        {
+          "name": "占位",
+          "type": "bar",
+          "stack": "total",
+          "itemStyle": { "borderColor": "transparent", "color": "transparent" }
+        },
+        {
+          "name": "数值",
+          "type": "bar",
+          "stack": "total",
+          "barWidth": "40%",
+          "label": {
+            "show": true,
+            "position": "top",
+            "color": "#1F2937",
+            "fontSize": 11,
+            "fontWeight": "bold"
+          },
+          "itemStyle": { "borderRadius": [4, 4, 0, 0] }
+        }
+      ],
+      "colorScheme": {
+        "startValue": "#3B82F6",
+        "decreaseValue": "#10B981",
+        "increaseValue": "#EF4444",
+        "endValue": "#E60012"
+      }
+    }
+  }
+}

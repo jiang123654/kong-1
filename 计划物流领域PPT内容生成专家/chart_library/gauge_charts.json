@@ -1,0 +1,53 @@
+{
+  "gauge_kpi": {
+    "name": "仪表盘-KPI达成",
+    "description": "用于核心KPI达成率展示",
+    "适用页面": ["总览页", "核心指标页"],
+    "baseOption": {
+      "series": [{
+        "type": "gauge",
+        "startAngle": 210,
+        "endAngle": -30,
+        "min": 0,
+        "max": 100,
+        "progress": { "show": true, "width": 18 },
+        "axisLine": {
+          "lineStyle": {
+            "width": 18,
+            "color": [[0.6, "#EF4444"], [0.85, "#F59E0B"], [1, "#10B981"]]
+          }
+        },
+        "axisTick": { "show": false },
+        "splitLine": { "length": 12, "lineStyle": { "width": 2, "color": "#fff" } },
+        "axisLabel": { "distance": 25, "color": "#9CA3AF", "fontSize": 10 },
+        "anchor": {
+          "show": true,
+          "size": 20,
+          "itemStyle": { "color": "#fff", "borderColor": "#E60012", "borderWidth": 3 }
+        },
+        "pointer": { "width": 4, "length": "60%", "itemStyle": { "color": "#E60012" } },
+        "title": { "offsetCenter": [0, "70%"], "fontSize": 14, "color": "#4B5563" },
+        "detail": {
+          "offsetCenter": [0, "45%"],
+          "fontSize": 28,
+          "fontWeight": "bold",
+          "color": "#1F2937"
+        }
+      }]
+    },
+    "variants": {
+      "cost_rate": {
+        "min": 3.0,
+        "max": 5.0,
+        "axisLine_color": [[0.5, "#10B981"], [0.8, "#F59E0B"], [1, "#EF4444"]],
+        "detail_formatter": "{value}%"
+      },
+      "achievement": {
+        "min": 0,
+        "max": 100,
+        "axisLine_color": [[0.6, "#EF4444"], [0.85, "#F59E0B"], [1, "#10B981"]],
+        "detail_formatter": "{value}%"
+      }
+    }
+  }
+}
